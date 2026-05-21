@@ -151,12 +151,6 @@ Schedulify-App/
 
 ---
 
-## License
-
-MIT - free for personal and educational use.
-
----
-
 <p align="center">
   <em>Built for colleges. Runs everywhere Android does.</em>
 </p>
