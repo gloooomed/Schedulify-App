@@ -16,10 +16,6 @@
   </a>
   <a href="https://github.com/gloooomed/Schedulify-App/forks">
     <img src="https://img.shields.io/github/forks/gloooomed/Schedulify-App?style=for-the-badge&labelColor=0A0F1E&color=3B82F6&label=FORKS" alt="Forks" />
-  </a>
-  <a href="LICENSE">
-    <img src="https://img.shields.io/badge/LICENSE-MIT-brightgreen?style=for-the-badge&labelColor=0A0F1E" alt="License" />
-  </a>
   <a href="#">
     <img src="https://img.shields.io/badge/PLATFORM-Android-8B5CF6?style=for-the-badge&labelColor=0A0F1E" alt="Platform" />
   </a>
