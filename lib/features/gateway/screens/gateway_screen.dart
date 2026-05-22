@@ -38,13 +38,15 @@ class _GatewayScreenState extends State<GatewayScreen> {
   Future<void> _autoConnect() async {
     setState(() { _isLoading = true; _error = null; });
     await ConfigStore.instance.set(AppConfig(
-      supabaseUrl:    _builtInUrl,
+      supabaseUrl:     _builtInUrl,
       supabaseAnonKey: _builtInKey,
-      collegeName:    _builtInName.isNotEmpty ? _builtInName : null,
-      collegeId:      _builtInId.isNotEmpty   ? _builtInId   : null,
-      setupComplete:  true,
+      collegeName:     _builtInName.isNotEmpty ? _builtInName : null,
+      collegeId:       _builtInId.isNotEmpty   ? _builtInId   : null,
+      setupComplete:   true,
     ));
     SupabaseClientManager.instance.reset();
+    // Small delay to let SharedPreferences flush before navigation
+    await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) context.go('/login');
   }
 

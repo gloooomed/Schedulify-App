@@ -11,16 +11,20 @@ class VendorRegistry {
   static VendorRegistry get instance => _instance ??= VendorRegistry._();
   VendorRegistry._();
 
-  late final SupabaseClient _client;
+  SupabaseClient? _client;
 
-  void init() {
-    _client = SupabaseClient(_vendorUrl, _vendorAnonKey);
+  // Lazy init — client is created only when first used, not at app startup.
+  // This prevents DNS failures from blocking the app on physical devices.
+  void init() { /* no-op: client is created lazily */ }
+
+  SupabaseClient get _registry {
+    _client ??= SupabaseClient(_vendorUrl, _vendorAnonKey);
+    return _client!;
   }
-
   bool verifyAccessCode(String code) => code == _vendorAccessCode;
 
   Future<RegisteredCollege?> getCollegeConfig(String collegeId) async {
-    final res = await _client
+    final res = await _registry
         .from('registered_colleges')
         .select()
         .eq('college_id', collegeId)
@@ -31,7 +35,7 @@ class VendorRegistry {
   }
 
   Future<bool> checkCollegeIdExists(String collegeId) async {
-    final res = await _client
+    final res = await _registry
         .from('registered_colleges')
         .select('id')
         .eq('college_id', collegeId)
@@ -60,7 +64,7 @@ class VendorRegistry {
     required String anonKey,
   }) async {
     final collegeId = await generateCollegeId(collegeName);
-    await _client.from('registered_colleges').insert({
+    await _registry.from('registered_colleges').insert({
       'college_id': collegeId,
       'college_name': collegeName,
       'contact_email': contactEmail,
