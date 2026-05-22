@@ -18,12 +18,21 @@ create table if not exists profiles (
   email text,
   role text default 'student',
   department_id uuid,
+  employee_id text,
+  roll_number text,
+  batch text,
+  semester text,
+  phone text,
+  avatar_url text,
+  is_active bool default true,
   created_at timestamptz default now()
 );
 create table if not exists departments (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   code text,
+  description text,
+  head_id uuid references profiles(id),
   created_at timestamptz default now()
 );
 create table if not exists courses (
@@ -32,24 +41,36 @@ create table if not exists courses (
   code text,
   department_id uuid references departments(id),
   credits int default 3,
+  semester text,
+  course_type text default 'theory',
+  is_elective bool default false,
+  description text,
   created_at timestamptz default now()
 );
 create table if not exists classrooms (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   capacity int default 60,
+  room_type text default 'lecture',
+  building text,
+  floor int,
   is_available bool default true,
   created_at timestamptz default now()
 );
 create table if not exists timetables (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  department_id uuid references departments(id),
+  academic_year text default '2024-25',
+  semester text default 'odd',
   status text default 'draft',
+  is_active bool default false,
+  generated_by uuid references profiles(id),
   created_at timestamptz default now()
 );
 create table if not exists timetable_entries (
   id uuid primary key default gen_random_uuid(),
-  timetable_id uuid references timetables(id),
+  timetable_id uuid references timetables(id) on delete cascade,
   course_id uuid references courses(id),
   classroom_id uuid references classrooms(id),
   faculty_id uuid references profiles(id),
@@ -59,27 +80,41 @@ create table if not exists timetable_entries (
   session_type text default 'lecture',
   student_group text
 );
-create table if not exists enrollments (
+create table if not exists student_enrollments (
   id uuid primary key default gen_random_uuid(),
   student_id uuid references profiles(id),
-  course_id uuid references courses(id)
+  course_id uuid references courses(id),
+  status text default 'active',
+  created_at timestamptz default now()
 );
 do \$\$ begin
-  if not exists (select from pg_policies where tablename='profiles') then
+  if not exists (select from pg_policies where tablename='profiles' and policyname='Allow all') then
     alter table profiles enable row level security;
-    create policy "Allow all" on profiles for all using (true);
+    create policy "Allow all" on profiles for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='departments' and policyname='Allow all') then
     alter table departments enable row level security;
-    create policy "Allow all" on departments for all using (true);
+    create policy "Allow all" on departments for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='courses' and policyname='Allow all') then
     alter table courses enable row level security;
-    create policy "Allow all" on courses for all using (true);
+    create policy "Allow all" on courses for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='classrooms' and policyname='Allow all') then
     alter table classrooms enable row level security;
-    create policy "Allow all" on classrooms for all using (true);
+    create policy "Allow all" on classrooms for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='timetables' and policyname='Allow all') then
     alter table timetables enable row level security;
-    create policy "Allow all" on timetables for all using (true);
+    create policy "Allow all" on timetables for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='timetable_entries' and policyname='Allow all') then
     alter table timetable_entries enable row level security;
-    create policy "Allow all" on timetable_entries for all using (true);
-    alter table enrollments enable row level security;
-    create policy "Allow all" on enrollments for all using (true);
+    create policy "Allow all" on timetable_entries for all using (true) with check (true);
+  end if;
+  if not exists (select from pg_policies where tablename='student_enrollments' and policyname='Allow all') then
+    alter table student_enrollments enable row level security;
+    create policy "Allow all" on student_enrollments for all using (true) with check (true);
   end if;
 end \$\$;
 ''';
@@ -247,6 +282,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       await ConfigStore.instance.set(AppConfig(
         supabaseUrl: _supabaseUrl.text.trim(),
         supabaseAnonKey: _anonKey.text.trim(),
+        serviceRoleKey: _serviceRoleKey.text.trim(),
         collegeName: _collegeName.text.trim(),
         collegeId: collegeId,
         setupComplete: true,

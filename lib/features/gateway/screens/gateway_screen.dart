@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,12 @@ import '../../../services/vendor_registry.dart';
 import '../../../config/config_store.dart';
 import '../../../services/supabase_client.dart';
 import '../../../shared/widgets/widgets.dart';
+
+// Baked-in college credentials (set via --dart-define-from-file)
+const _builtInUrl    = String.fromEnvironment('COLLEGE_SUPABASE_URL',  defaultValue: '');
+const _builtInKey    = String.fromEnvironment('COLLEGE_SUPABASE_ANON_KEY', defaultValue: '');
+const _builtInName   = String.fromEnvironment('COLLEGE_NAME',  defaultValue: '');
+const _builtInId     = String.fromEnvironment('COLLEGE_ID',    defaultValue: '');
 
 class GatewayScreen extends StatefulWidget {
   const GatewayScreen({super.key});
@@ -19,15 +26,39 @@ class _GatewayScreenState extends State<GatewayScreen> {
   bool _isLoading = false;
   String? _error;
 
+  @override
+  void initState() {
+    super.initState();
+    // If college creds are baked into the build, skip the lookup entirely
+    if (_builtInUrl.isNotEmpty && _builtInKey.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _autoConnect());
+    }
+  }
+
+  Future<void> _autoConnect() async {
+    setState(() { _isLoading = true; _error = null; });
+    await ConfigStore.instance.set(AppConfig(
+      supabaseUrl:    _builtInUrl,
+      supabaseAnonKey: _builtInKey,
+      collegeName:    _builtInName.isNotEmpty ? _builtInName : null,
+      collegeId:      _builtInId.isNotEmpty   ? _builtInId   : null,
+      setupComplete:  true,
+    ));
+    SupabaseClientManager.instance.reset();
+    if (mounted) context.go('/login');
+  }
+
   Future<void> _connect() async {
     final id = _controller.text.trim().toUpperCase();
     if (id.isEmpty) return;
     setState(() { _isLoading = true; _error = null; });
 
     try {
-      final college = await VendorRegistry.instance.getCollegeConfig(id);
+      final college = await VendorRegistry.instance
+          .getCollegeConfig(id)
+          .timeout(const Duration(seconds: 15));
       if (college == null) {
-        setState(() { _error = 'College not found. Check the ID or set up a new college.'; _isLoading = false; });
+        setState(() { _error = 'College not found. Check the ID.'; _isLoading = false; });
         return;
       }
       if (college.supabaseUrl == null || college.anonKey == null) {
@@ -43,8 +74,10 @@ class _GatewayScreenState extends State<GatewayScreen> {
       ));
       SupabaseClientManager.instance.reset();
       if (mounted) context.go('/login');
+    } on TimeoutException {
+      setState(() { _error = 'Connection timed out. Check your internet.'; _isLoading = false; });
     } catch (e) {
-      setState(() { _error = e.toString(); _isLoading = false; });
+      setState(() { _error = 'Could not connect. Check your internet connection.'; _isLoading = false; });
     }
   }
 
@@ -137,8 +170,6 @@ class _GatewayScreenState extends State<GatewayScreen> {
                     ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.15, end: 0),
 
                     const SizedBox(height: 24),
-
-                    // Setup link
                     GestureDetector(
                       onTap: () => context.go('/setup'),
                       child: const Text.rich(

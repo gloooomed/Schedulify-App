@@ -58,33 +58,36 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Student Portal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        ]),
-        actions: [
-          if (user != null) RoleBadge(role: user.role),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
-          const SizedBox(width: 8),
-        ],
-        bottom: TabBar(
-          onTap: (i) => setState(() => _tab = i),
-          tabs: const [
-            Tab(text: 'Schedule', icon: Icon(Icons.calendar_today_rounded, size: 16)),
-            Tab(text: 'Courses', icon: Icon(Icons.book_rounded, size: 16)),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Student Portal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          ]),
+          actions: [
+            if (user != null) RoleBadge(role: user.role),
+            const SizedBox(width: 8),
+            IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
+            const SizedBox(width: 8),
           ],
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textMuted,
-          indicatorColor: AppColors.primary,
-          labelStyle: const TextStyle(fontSize: 12),
+          bottom: TabBar(
+            onTap: (i) => setState(() => _tab = i),
+            tabs: const [
+              Tab(text: 'Schedule', icon: Icon(Icons.calendar_today_rounded, size: 16)),
+              Tab(text: 'Courses', icon: Icon(Icons.book_rounded, size: 16)),
+            ],
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textMuted,
+            indicatorColor: AppColors.primary,
+            labelStyle: const TextStyle(fontSize: 12),
+          ),
         ),
-      ),
-      body: RefreshIndicator(
-        onRefresh: _load, color: AppColors.primary,
-        child: _tab == 0 ? _scheduleView(user) : _coursesView(),
+        body: RefreshIndicator(
+          onRefresh: _load, color: AppColors.primary,
+          child: _tab == 0 ? _scheduleView(user) : _coursesView(),
+        ),
       ),
     );
   }
@@ -99,9 +102,14 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             child: Row(children: [
               CircleAvatar(
                 radius: 28, backgroundColor: AppColors.student.withOpacity(0.2),
-                child: Text('${user.firstName[0]}${user.lastName[0]}',
-                    style: const TextStyle(color: AppColors.student,
-                        fontWeight: FontWeight.w700, fontSize: 18)),
+                child: Text(
+                  user.firstName.isNotEmpty
+                      ? (user.lastName.isNotEmpty
+                          ? '${user.firstName[0]}${user.lastName[0]}'
+                          : user.firstName[0])
+                      : '?',
+                  style: const TextStyle(color: AppColors.student,
+                      fontWeight: FontWeight.w700, fontSize: 18)),
               ),
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -230,6 +238,11 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   }
 }
 
+String _fmtTime(String? t) {
+  if (t == null || t.isEmpty) return '--:--';
+  return t.length >= 5 ? t.substring(0, 5) : t;
+}
+
 class _StudentSlot extends StatelessWidget {
   final TimetableEntry entry;
   const _StudentSlot({required this.entry});
@@ -253,10 +266,11 @@ class _StudentSlot extends StatelessWidget {
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(entry.course?.name ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600,
               color: AppColors.textPrimary, fontSize: 14)),
-          Text('${entry.startTime.substring(0, 5)} - ${entry.endTime.substring(0, 5)}'
-              '${entry.faculty != null ? ' · ${entry.faculty!.fullName}' : ''}'
-              '${entry.classroom != null ? ' · ${entry.classroom!.name}' : ''}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          Text(
+            '${_fmtTime(entry.startTime)} - ${_fmtTime(entry.endTime)}'
+            '${entry.faculty != null ? ' · ${entry.faculty!.fullName}' : ''}'
+            '${entry.classroom != null ? ' · ${entry.classroom!.name}' : ''}',
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
         ])),
         Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),

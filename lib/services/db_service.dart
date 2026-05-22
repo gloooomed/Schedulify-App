@@ -27,7 +27,7 @@ class DbService {
   static Future<List<Department>> getDepartments() async {
     final res = await supabase
         .from('departments')
-        .select('*, profiles(id,first_name,last_name)')
+        .select('*, profiles(id,full_name)')
         .order('name');
     return (res as List).map((j) => Department.fromJson(j)).toList();
   }
@@ -69,7 +69,7 @@ class DbService {
         .select()
         .eq('role', 'faculty')
         .eq('is_active', true)
-        .order('first_name');
+        .order('full_name');
     return (res as List).map((j) => Profile.fromJson(j)).toList();
   }
 
@@ -78,7 +78,7 @@ class DbService {
         .from('profiles')
         .select()
         .inFilter('role', ['faculty', 'student'])
-        .order('first_name');
+        .order('full_name');
     return (res as List).map((j) => Profile.fromJson(j)).toList();
   }
 
@@ -134,7 +134,7 @@ class DbService {
         .select('''
           *,
           courses(id,name,code,course_type),
-          profiles(id,first_name,last_name,department),
+          profiles(id,full_name,department_id),
           classrooms(id,name,building),
           timetables!inner(is_active)
         ''')
@@ -157,7 +157,6 @@ class DbService {
   }
 
   static Future<List<TimetableEntry>> getStudentSchedule(String studentId) async {
-    // Get enrolled course IDs first
     final enrollments = await supabase
         .from('student_enrollments')
         .select('course_id')
@@ -170,7 +169,7 @@ class DbService {
         .select('''
           *,
           courses(id,name,code,course_type),
-          profiles(id,first_name,last_name),
+          profiles(id,full_name),
           classrooms(id,name,building),
           timetables!inner(is_active)
         ''')

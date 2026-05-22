@@ -102,13 +102,15 @@ class Department {
     final d = Department(
       id: j['id'],
       name: j['name'],
-      code: j['code'],
+      code: j['code'] ?? '',
       headId: j['head_id'],
       description: j['description'],
-      createdAt: DateTime.parse(j['created_at']),
+      createdAt: j['created_at'] != null
+          ? DateTime.parse(j['created_at'])
+          : DateTime.now(),
     );
     if (j['profiles'] != null) {
-      d.head = Profile.fromJson(j['profiles']);
+      d.head = Profile.fromJson(j['profiles'] as Map<String, dynamic>);
     }
     return d;
   }
@@ -130,32 +132,34 @@ class Course {
   Course({
     required this.id,
     required this.name,
-    required this.code,
-    required this.credits,
+    this.code = '',
+    this.credits = 3,
     this.departmentId,
     this.semester,
-    required this.courseType,
-    required this.isElective,
+    this.courseType = 'theory',
+    this.isElective = false,
     this.description,
-    required this.createdAt,
+    DateTime? createdAt,
     this.department,
-  });
+  }) : createdAt = createdAt ?? DateTime.now();
 
   factory Course.fromJson(Map<String, dynamic> j) {
     final c = Course(
-      id: j['id'],
-      name: j['name'],
-      code: j['code'],
-      credits: j['credits'] ?? 3,
-      departmentId: j['department_id'],
-      semester: j['semester'],
-      courseType: j['course_type'] ?? 'theory',
-      isElective: j['is_elective'] ?? false,
-      description: j['description'],
-      createdAt: DateTime.parse(j['created_at']),
+      id: j['id'] as String,
+      name: j['name'] as String? ?? '',
+      code: j['code'] as String? ?? '',
+      credits: j['credits'] as int? ?? 3,
+      departmentId: j['department_id'] as String?,
+      semester: j['semester'] as String?,
+      courseType: j['course_type'] as String? ?? 'theory',
+      isElective: j['is_elective'] as bool? ?? false,
+      description: j['description'] as String?,
+      createdAt: j['created_at'] != null
+          ? DateTime.parse(j['created_at'] as String)
+          : DateTime.now(),
     );
     if (j['departments'] != null) {
-      c.department = Department.fromJson(j['departments']);
+      c.department = Department.fromJson(j['departments'] as Map<String, dynamic>);
     }
     return c;
   }

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/models.dart';
 import '../../services/supabase_client.dart';
@@ -146,33 +148,65 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     try {
       final config = await _getConfig();
-      final isolatedClient = SupabaseClient(
-        config.$1,
-        config.$2,
-        authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.pkce,
-          autoRefreshToken: false,
-        ),
-      );
-      final res = await isolatedClient.auth.signUp(
-        email: email,
-        password: password,
-      );
-      if (res.user == null) return 'Failed to create auth user';
-      await supabase.from('profiles').insert({
-        'id': res.user!.id,
-        ...profileData,
-      });
-      return null;
+      final serviceKey = config.$3; // service role key
+
+      if (serviceKey != null && serviceKey.isNotEmpty) {
+        // ── Admin API path (preferred) ──────────────────────────────
+        // Creates user with email_confirm: true — no verification needed
+        final base = config.$1.replaceAll(RegExp(r'/$'), '');
+        final authRes = await http.post(
+          Uri.parse('$base/auth/v1/admin/users'),
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': serviceKey,
+            'Authorization': 'Bearer $serviceKey',
+          },
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'email_confirm': true,
+            'user_metadata': profileData,
+          }),
+        );
+        if (authRes.statusCode > 299) {
+          return 'Failed to create user: ${authRes.body}';
+        }
+        final userId = jsonDecode(authRes.body)['id'] as String;
+        await supabase.from('profiles').insert({
+          'id': userId,
+          'email': email,
+          ...profileData,
+        });
+        return null;
+      } else {
+        // ── Fallback: signUp (requires email confirmation disabled in Supabase) ──
+        final isolatedClient = SupabaseClient(
+          config.$1, config.$2,
+          authOptions: const FlutterAuthClientOptions(
+            authFlowType: AuthFlowType.implicit,
+            autoRefreshToken: false,
+          ),
+        );
+        final res = await isolatedClient.auth.signUp(
+          email: email, password: password, data: profileData,
+        );
+        if (res.user == null) return 'Failed to create auth user';
+        await supabase.from('profiles').insert({
+          'id': res.user!.id,
+          'email': email,
+          ...profileData,
+        });
+        return null;
+      }
     } catch (e) {
       return e.toString();
     }
   }
 
-  Future<(String, String)> _getConfig() async {
+  Future<(String, String, String?)> _getConfig() async {
     final cfg = ConfigStore.instance.get();
     if (cfg == null) throw StateError('No college config found');
-    return (cfg.supabaseUrl, cfg.supabaseAnonKey);
+    return (cfg.supabaseUrl, cfg.supabaseAnonKey, cfg.serviceRoleKey);
   }
 }
 
