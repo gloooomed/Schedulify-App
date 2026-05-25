@@ -50,9 +50,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
 
   Future<void> _logout() async {
     await ref.read(authProvider.notifier).logout();
-    ConfigStore.instance.clear();
-    SupabaseClientManager.instance.reset();
-    if (mounted) context.go('/');
+    if (mounted) context.go('/login');
   }
 
   @override
