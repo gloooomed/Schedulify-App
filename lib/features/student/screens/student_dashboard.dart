@@ -20,10 +20,12 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   List<TimetableEntry> _schedule = [];
   List<Course> _courses = [];
   bool _loading = true;
-  int _tab = 0;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
 
   Future<void> _load() async {
     final user = ref.read(currentUserProvider);
@@ -70,21 +72,40 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
             const SizedBox(width: 8),
           ],
-          bottom: TabBar(
-            onTap: (i) => setState(() => _tab = i),
-            tabs: const [
+          bottom: const TabBar(
+            tabs: [
               Tab(text: 'Schedule', icon: Icon(Icons.calendar_today_rounded, size: 16)),
               Tab(text: 'Courses', icon: Icon(Icons.book_rounded, size: 16)),
             ],
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textMuted,
             indicatorColor: AppColors.primary,
-            labelStyle: const TextStyle(fontSize: 12),
+            labelStyle: TextStyle(fontSize: 12),
           ),
         ),
-        body: RefreshIndicator(
-          onRefresh: _load, color: AppColors.primary,
-          child: _tab == 0 ? _scheduleView(user) : _coursesView(),
+        body: TabBarView(
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: RefreshIndicator(
+                  onRefresh: _load,
+                  color: AppColors.primary,
+                  child: _scheduleView(user),
+                ),
+              ),
+            ),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 900),
+                child: RefreshIndicator(
+                  onRefresh: _load,
+                  color: AppColors.primary,
+                  child: _coursesView(),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

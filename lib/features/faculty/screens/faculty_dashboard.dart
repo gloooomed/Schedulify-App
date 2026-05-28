@@ -24,7 +24,10 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   DateTime _selectedDay = DateTime.now();
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
 
   Future<void> _load() async {
     final user = ref.read(currentUserProvider);
@@ -32,8 +35,8 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
     setState(() => _loading = true);
     try {
       final data = await DbService.getFacultySchedule(user.id);
-      setState(() { _schedule = data; _loading = false; });
-    } catch (_) { setState(() => _loading = false); }
+      if (mounted) setState(() { _schedule = data; _loading = false; });
+    } catch (_) { if (mounted) setState(() => _loading = false); }
   }
 
   List<TimetableEntry> _entriesForDay(DateTime day) {
@@ -66,103 +69,108 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
           const SizedBox(width: 8),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: _load, color: AppColors.primary,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // Today's classes
-            GlassCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [
-                  const Icon(Icons.today_rounded, color: AppColors.primary, size: 20),
-                  const SizedBox(width: 8),
-                  Text("Today — ${DateFormat('EEEE, d MMM').format(DateTime.now())}",
-                      style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
-                ]),
-                const SizedBox(height: 16),
-                if (_loading)
-                  ...List.generate(3, (_) => Padding(padding: const EdgeInsets.only(bottom: 8),
-                      child: ShimmerBox(height: 56, radius: 10)))
-                else if (_todayEntries.isEmpty)
-                  const Center(child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('No classes today 🎉', style: TextStyle(color: AppColors.textSecondary)),
-                  ))
-                else
-                  ..._todayEntries.map((e) => _ClassSlot(entry: e)),
-              ]),
-            ),
-            const SizedBox(height: 20),
-
-            // Weekly calendar
-            GlassCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Row(children: [
-                  Icon(Icons.calendar_view_week_rounded, color: AppColors.info, size: 20),
-                  SizedBox(width: 8),
-                  Text('Weekly Schedule', style: TextStyle(fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary, fontSize: 15)),
-                ]),
-                const SizedBox(height: 12),
-                TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
-                  calendarFormat: CalendarFormat.week,
-                  startingDayOfWeek: StartingDayOfWeek.monday,
-                  eventLoader: (day) => _entriesForDay(day).isNotEmpty ? [true] : [],
-                  onDaySelected: (sel, foc) => setState(() {
-                    _selectedDay = sel; _focusedDay = foc;
-                  }),
-                  calendarStyle: const CalendarStyle(
-                    defaultTextStyle: TextStyle(color: AppColors.textPrimary),
-                    weekendTextStyle: TextStyle(color: AppColors.textSecondary),
-                    selectedDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    todayDecoration: BoxDecoration(color: AppColors.info, shape: BoxShape.circle),
-                    markerDecoration: BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
-                    outsideDaysVisible: false,
-                  ),
-                  headerStyle: const HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                    titleTextStyle: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                    leftChevronIcon: Icon(Icons.chevron_left, color: AppColors.textSecondary),
-                    rightChevronIcon: Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                  ),
-                  daysOfWeekStyle: const DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                    weekendStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
-                  ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: RefreshIndicator(
+            onRefresh: _load, color: AppColors.primary,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                // Today's classes
+                GlassCard(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Row(children: [
+                      const Icon(Icons.today_rounded, color: AppColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text("Today — ${DateFormat('EEEE, d MMM').format(DateTime.now())}",
+                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
+                    ]),
+                    const SizedBox(height: 16),
+                    if (_loading)
+                      ...List.generate(3, (_) => Padding(padding: const EdgeInsets.only(bottom: 8),
+                          child: ShimmerBox(height: 56, radius: 10)))
+                    else if (_todayEntries.isEmpty)
+                      const Center(child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Text('No classes today 🎉', style: TextStyle(color: AppColors.textSecondary)),
+                      ))
+                    else
+                      ..._todayEntries.map((e) => _ClassSlot(entry: e)),
+                  ]),
                 ),
-                const SizedBox(height: 12),
-                if (_selectedEntries.isNotEmpty) ...[
-                  Text(DateFormat('EEEE classes').format(_selectedDay),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  const SizedBox(height: 8),
-                  ..._selectedEntries.map((e) => _ClassSlot(entry: e)),
-                ],
-              ]),
-            ),
-            const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-            // Weekly stats
-            GlassCard(
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('This Week', style: TextStyle(fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary, fontSize: 15)),
-                const SizedBox(height: 16),
-                Row(children: [
-                  _MiniStat('Classes', '${_schedule.length}', Icons.class_rounded, AppColors.primary),
-                  _MiniStat('Courses', '${_schedule.map((e) => e.courseId).toSet().length}',
-                      Icons.book_rounded, AppColors.info),
-                  _MiniStat('Labs', '${_schedule.where((e) => e.sessionType == 'lab').length}',
-                      Icons.science_rounded, AppColors.warning),
-                ]),
-              ]),
+                // Weekly calendar
+                GlassCard(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Row(children: [
+                      Icon(Icons.calendar_view_week_rounded, color: AppColors.info, size: 20),
+                      SizedBox(width: 8),
+                      Text('Weekly Schedule', style: TextStyle(fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary, fontSize: 15)),
+                    ]),
+                    const SizedBox(height: 12),
+                    TableCalendar(
+                      firstDay: DateTime.utc(2020, 1, 1),
+                      lastDay: DateTime.utc(2030, 12, 31),
+                      focusedDay: _focusedDay,
+                      selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
+                      calendarFormat: CalendarFormat.week,
+                      startingDayOfWeek: StartingDayOfWeek.monday,
+                      eventLoader: (day) => _entriesForDay(day).isNotEmpty ? [true] : [],
+                      onDaySelected: (sel, foc) => setState(() {
+                        _selectedDay = sel; _focusedDay = foc;
+                      }),
+                      calendarStyle: const CalendarStyle(
+                        defaultTextStyle: TextStyle(color: AppColors.textPrimary),
+                        weekendTextStyle: TextStyle(color: AppColors.textSecondary),
+                        selectedDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                        todayDecoration: BoxDecoration(color: AppColors.info, shape: BoxShape.circle),
+                        markerDecoration: BoxDecoration(color: AppColors.success, shape: BoxShape.circle),
+                        outsideDaysVisible: false,
+                      ),
+                      headerStyle: const HeaderStyle(
+                        formatButtonVisible: false,
+                        titleCentered: true,
+                        titleTextStyle: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                        leftChevronIcon: Icon(Icons.chevron_left, color: AppColors.textSecondary),
+                        rightChevronIcon: Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                      ),
+                      daysOfWeekStyle: const DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                        weekendStyle: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (_selectedEntries.isNotEmpty) ...[
+                      Text(DateFormat('EEEE classes').format(_selectedDay),
+                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                      const SizedBox(height: 8),
+                      ..._selectedEntries.map((e) => _ClassSlot(entry: e)),
+                    ],
+                  ]),
+                ),
+                const SizedBox(height: 20),
+
+                // Weekly stats
+                GlassCard(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    const Text('This Week', style: TextStyle(fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary, fontSize: 15)),
+                    const SizedBox(height: 16),
+                    Row(children: [
+                      _MiniStat('Classes', '${_schedule.length}', Icons.class_rounded, AppColors.primary),
+                      _MiniStat('Courses', '${_schedule.map((e) => e.courseId).toSet().length}',
+                          Icons.book_rounded, AppColors.info),
+                      _MiniStat('Labs', '${_schedule.where((e) => e.sessionType == 'lab').length}',
+                          Icons.science_rounded, AppColors.warning),
+                    ]),
+                  ]),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

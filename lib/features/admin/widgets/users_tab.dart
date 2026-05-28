@@ -20,15 +20,32 @@ class _UsersTabState extends ConsumerState<UsersTab> {
   bool _loading = true;
 
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  // ── KEY FIX ────────────────────────────────────────────────────────────────
+  // When the admin switches Faculty ↔ Students, Flutter reuses this same
+  // element (same widget type, same position). initState is NOT called again.
+  // didUpdateWidget fires instead — we must reload if role changed.
+  @override
+  void didUpdateWidget(covariant UsersTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.role != widget.role) {
+      _load();
+    }
+  }
 
   Future<void> _load() async {
+    if (!mounted) return;
     setState(() => _loading = true);
     try {
       final results = await Future.wait([
         DbService.getAllUsers(),
         DbService.getDepartments(),
       ]);
+      if (!mounted) return;
       setState(() {
         _users = (results[0] as List<Profile>)
             .where((u) => u.role == widget.role)
@@ -36,7 +53,9 @@ class _UsersTabState extends ConsumerState<UsersTab> {
         _departments = results[1] as List<Department>;
         _loading = false;
       });
-    } catch (_) { setState(() => _loading = false); }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   void _showCreateForm() {
