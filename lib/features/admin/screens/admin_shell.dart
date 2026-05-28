@@ -53,21 +53,29 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     final user = ref.watch(currentUserProvider);
     final config = ConfigStore.instance.get();
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final showSidebar = screenWidth >= 720;
+
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(user, config),
       body: SafeArea(
         child: Row(
           children: [
-            // Sidebar (tablets/larger phones in landscape)
-            if (MediaQuery.of(context).size.width >= 720)
-              _buildSidebar(user, config),
-            // Main content
+            if (showSidebar) _buildSidebar(user, config),
+            // Main content — centred with max-width on very wide screens
             Expanded(
               child: Column(
                 children: [
                   _buildTopBar(user, config, context),
-                  Expanded(child: _buildContent()),
+                  Expanded(
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: _buildContent(),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -194,15 +202,17 @@ class _AdminShellState extends ConsumerState<AdminShell> {
 
   Widget _buildContent() {
     return switch (_section) {
-      'overview' => const OverviewTab(),
+      'overview'    => const OverviewTab(),
       'departments' => const DepartmentsTab(),
-      'courses' => const CoursesTab(),
-      'faculty' => const UsersTab(role: 'faculty'),
-      'students' => const UsersTab(role: 'student'),
-      'classrooms' => const ClassroomsTab(),
-      'timetables' => const TimetablesTab(),
-      'upload' => const UploadTab(),
-      _ => const OverviewTab(),
+      'courses'     => const CoursesTab(),
+      // ValueKey forces Flutter to create a FRESH element when switching
+      // between Faculty and Students — avoids stale-data widget reuse.
+      'faculty'     => const UsersTab(key: ValueKey('tab_faculty'), role: 'faculty'),
+      'students'    => const UsersTab(key: ValueKey('tab_student'), role: 'student'),
+      'classrooms'  => const ClassroomsTab(),
+      'timetables'  => const TimetablesTab(),
+      'upload'      => const UploadTab(),
+      _             => const OverviewTab(),
     };
   }
 }
