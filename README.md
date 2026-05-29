@@ -11,9 +11,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/gloooomed/Schedulify-App/stargazers">
-    <img src="https://img.shields.io/github/stars/gloooomed/Schedulify-App?style=for-the-badge&labelColor=0A0F1E&color=3B82F6&label=STARS" alt="Stars" />
-  </a>
   <a href="https://github.com/gloooomed/Schedulify-App/forks">
     <img src="https://img.shields.io/github/forks/gloooomed/Schedulify-App?style=for-the-badge&labelColor=0A0F1E&color=3B82F6&label=FORKS" alt="Forks" />
   <a href="#">
