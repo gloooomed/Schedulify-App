@@ -93,28 +93,59 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
           child: const Icon(Icons.add)),
       body: RefreshIndicator(
         onRefresh: _load, color: AppColors.primary,
-        child: GridView.builder(
+        child: ListView.builder(
           padding: const EdgeInsets.all(20),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.3),
-          itemCount: _loading ? 6 : _items.length,
+          itemCount: _loading ? 6 : (_items.isEmpty ? 1 : _items.length + 1),
           itemBuilder: (_, i) {
-            if (_loading) return ShimmerBox(height: 100, radius: 16);
-            final room = _items[i];
-            return GlassCard(
-              padding: const EdgeInsets.all(16),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
-                Row(children: [
+            // Header row
+            if (i == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: PageHeader(
+                  title: 'Classrooms',
+                  subtitle: _loading ? '' : '${_items.length} rooms',
+                  action: IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+                    onPressed: _load,
+                  ),
+                ),
+              );
+            }
+            final idx = i - 1;
+            if (_loading) return Padding(padding: const EdgeInsets.only(bottom: 12),
+                child: ShimmerBox(height: 76, radius: 16));
+            if (_items.isEmpty) {
+              return const EmptyState(icon: Icons.room_rounded,
+                  title: 'No classrooms yet',
+                  subtitle: 'Tap + to add a classroom');
+            }
+            final room = _items[idx];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: GlassCard(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                child: Row(children: [
                   Container(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: (room.isAvailable ? AppColors.success : AppColors.danger).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(Icons.room_rounded,
-                        color: room.isAvailable ? AppColors.success : AppColors.danger, size: 18),
+                        color: room.isAvailable ? AppColors.success : AppColors.danger, size: 20),
                   ),
-                  const Spacer(),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Text(room.name, style: const TextStyle(fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary, fontSize: 15)),
+                      Text(
+                        '${room.roomType.toUpperCase()}${room.capacity != null ? ' · ${room.capacity}' : ''}'
+                        '${room.building != null ? ' · ${room.building}' : ''}',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      ),
+                    ]),
+                  ),
                   Switch(
                     value: room.isAvailable, activeColor: AppColors.success,
                     onChanged: (v) async {
@@ -122,23 +153,17 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
                       _load();
                     },
                   ),
+                  GestureDetector(
+                    onTap: () => _showForm(room: room),
+                    child: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: () async { await DbService.deleteClassroom(room.id); _load(); },
+                    child: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),
+                  ),
                 ]),
-                const SizedBox(height: 8),
-                Text(room.name, style: const TextStyle(fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary, fontSize: 15)),
-                Text('${room.roomType.toUpperCase()}${room.capacity != null ? ' · ${room.capacity}' : ''}',
-                    style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                if (room.building != null)
-                  Text(room.building!, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
-                const Spacer(),
-                Row(children: [
-                  GestureDetector(onTap: () => _showForm(room: room),
-                      child: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 18)),
-                  const SizedBox(width: 12),
-                  GestureDetector(onTap: () async { await DbService.deleteClassroom(room.id); _load(); },
-                      child: const Icon(Icons.delete_outline, color: AppColors.danger, size: 18)),
-                ]),
-              ]),
+              ),
             );
           },
         ),

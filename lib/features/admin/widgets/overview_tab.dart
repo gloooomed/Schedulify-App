@@ -41,9 +41,17 @@ class _OverviewTabState extends State<OverviewTab> {
           const PageHeader(title: 'Overview', subtitle: 'System health and statistics'),
           const SizedBox(height: 24),
           if (_loading)
-            ...List.generate(4, (_) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: ShimmerBox(height: 80, radius: 16)))
+            LayoutBuilder(builder: (_, c) {
+              final cols = c.maxWidth > 600 ? 4 : 2;
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: cols,
+                crossAxisSpacing: 12, mainAxisSpacing: 12,
+                childAspectRatio: c.maxWidth > 600 ? 1.4 : 1.2,
+                children: List.generate(4, (_) => ShimmerBox(height: 80, radius: 16)),
+              );
+            })
           else ...[
             _statGrid(),
             const SizedBox(height: 28),
@@ -71,18 +79,25 @@ class _OverviewTabState extends State<OverviewTab> {
       ('Classrooms', '${_stats?['classrooms'] ?? 0}', Icons.room_rounded, AppColors.warning),
       ('Users', '${_stats?['users'] ?? 0}', Icons.people_rounded, AppColors.success),
     ];
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1.6,
-      ),
-      itemCount: items.length,
-      itemBuilder: (_, i) => StatCard(
-        label: items[i].$1, value: items[i].$2,
-        icon: items[i].$3, color: items[i].$4,
-      ),
-    );
+    // Responsive: 4 columns on web/tablet, 2 on mobile
+    return LayoutBuilder(builder: (_, constraints) {
+      final isWide = constraints.maxWidth > 600;
+      return GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: isWide ? 4 : 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: isWide ? 1.4 : 1.2,
+        ),
+        itemCount: items.length,
+        itemBuilder: (_, i) => StatCard(
+          label: items[i].$1, value: items[i].$2,
+          icon: items[i].$3, color: items[i].$4,
+        ),
+      );
+    });
   }
 
   Widget _statusRow(String label, bool ok) {
@@ -102,5 +117,3 @@ class _OverviewTabState extends State<OverviewTab> {
     );
   }
 }
-
-// Cleaned: removed unused flutter_animate import

@@ -16,9 +16,12 @@ class AuthState {
   const AuthState({this.user, this.isLoading = false, this.error});
 
   bool get isAuthenticated => user != null;
-  AuthState copyWith({Profile? user, bool? isLoading, String? error}) =>
+
+  // clearUser: pass true to explicitly set user to null (copyWith can't
+  // normally clear a nullable field because `user ?? this.user` ignores null).
+  AuthState copyWith({Profile? user, bool? isLoading, String? error, bool clearUser = false}) =>
       AuthState(
-        user: user ?? this.user,
+        user: clearUser ? null : (user ?? this.user),
         isLoading: isLoading ?? this.isLoading,
         error: error,
       );
@@ -40,18 +43,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {
       // not configured yet — silently ignore
     } finally {
-      state = state.copyWith(isLoading: false);
+      // Only stop loading if profile fetch didn't already set isLoading: false
+      if (state.isLoading) state = state.copyWith(isLoading: false);
     }
 
-    // Listen for auth changes
+    // Listen for auth changes.
+    // IMPORTANT: always set isLoading: true AND clear the old user BEFORE
+    // any async profile fetch, so the router never redirects based on a
+    // stale profile from a previous session.
     try {
       supabase.auth.onAuthStateChange.listen((data) async {
         final event = data.event;
         final session = data.session;
         if (event == AuthChangeEvent.signedIn && session != null) {
+          // Gate the router: clear old user + mark loading
+          state = const AuthState(isLoading: true);
           await _fetchProfile(session.user.id);
+          // Ensure loading is cleared even if _fetchProfile had no effect
+          if (state.isLoading) state = state.copyWith(isLoading: false);
         } else if (event == AuthChangeEvent.signedOut) {
-          state = const AuthState();
+          state = const AuthState(); // user: null, isLoading: false
         }
       });
     } catch (_) {}
@@ -65,7 +76,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
           .eq('id', userId)
           .maybeSingle();
       if (res != null) {
-        state = state.copyWith(user: Profile.fromJson(res), isLoading: false);
+        state = AuthState(user: Profile.fromJson(res), isLoading: false);
         return;
       }
     } catch (_) {
@@ -76,14 +87,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final authUser = supabase.auth.currentUser;
       if (authUser != null) {
         final meta = authUser.userMetadata ?? {};
-        final name = (meta['full_name'] as String? ?? authUser.email ?? 'Admin');
-        final parts = name.split(' ');
-        state = state.copyWith(
+        final name = (meta['full_name'] as String? ?? authUser.email ?? 'User');
+        final parts = name.trim().split(' ');
+        // Only use metadata role if explicitly set; never guess 'admin' as default
+        final role = (meta['role'] as String?)?.trim();
+        state = AuthState(
           user: Profile(
             id: authUser.id,
             firstName: parts.first,
             lastName: parts.length > 1 ? parts.skip(1).join(' ') : '',
-            role: meta['role'] as String? ?? 'admin',
+            role: (role != null && role.isNotEmpty) ? role : 'student',
             isActive: true,
             createdAt: DateTime.now(),
           ),
@@ -94,7 +107,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<String?> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    // ── CRITICAL: clear old user and set loading atomically ──────────────
+    // Using copyWith(isLoading: true) would keep the previous user in state,
+    // causing the router to redirect to the WRONG dashboard during login.
+    state = const AuthState(isLoading: true);
     try {
       final res = await supabase.auth.signInWithPassword(
         email: email,
@@ -102,17 +118,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       if (res.user != null) {
         await _fetchProfile(res.user!.id);
-        // If _fetchProfile didn't set a user (silent error), set one from auth data
+        // If _fetchProfile didn't set a user (silent error), build from auth data
         if (!state.isAuthenticated) {
           final meta = res.user!.userMetadata ?? {};
           final name = (meta['full_name'] as String? ?? email);
-          final parts = name.split(' ');
-          state = state.copyWith(
+          final parts = name.trim().split(' ');
+          final role = (meta['role'] as String?)?.trim();
+          state = AuthState(
             user: Profile(
               id: res.user!.id,
               firstName: parts.first,
               lastName: parts.length > 1 ? parts.skip(1).join(' ') : '',
-              role: meta['role'] as String? ?? 'admin',
+              role: (role != null && role.isNotEmpty) ? role : 'student',
               isActive: true,
               createdAt: DateTime.now(),
             ),
@@ -121,22 +138,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
         }
         return null; // success
       }
-      state = state.copyWith(isLoading: false);
+      state = const AuthState(isLoading: false);
       return 'Login failed. Please try again.';
     } on AuthException catch (e) {
-      state = state.copyWith(isLoading: false, error: e.message);
+      state = AuthState(isLoading: false, error: e.message);
       return e.message;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = AuthState(isLoading: false, error: e.toString());
       return e.toString();
     }
   }
 
   Future<void> logout() async {
+    // Clear state immediately so the router redirects to login NOW,
+    // not after the async signOut completes.
+    state = const AuthState();
     try {
       await supabase.auth.signOut();
     } catch (_) {}
-    state = const AuthState();
   }
 
   /// Create a new user without disrupting admin session.

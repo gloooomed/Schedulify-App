@@ -35,12 +35,34 @@ class _RouterNotifier extends ChangeNotifier {
     // Not configured → only gateway and setup are allowed
     if (!configReady && path != '/' && path != '/setup') return '/';
 
-    // Configured, not logged in → go to login (only from gateway)
+    // ── Unauthenticated guards ───────────────────────────────────────────────
+    // From gateway → go straight to login (skip gateway for configured apps)
     if (configReady && !isAuthenticated && path == '/') return '/login';
 
+    // *** THE CRITICAL FIX ***
+    // Not logged in on ANY protected path → send to login.
+    // Without this, logging out from /faculty leaves the user stuck there
+    // because there was no redirect rule, so Saurav's screen stayed visible
+    // while Ananya was logging in, causing the wrong-user illusion.
+    const _publicPaths = ['/', '/setup', '/login'];
+    if (!isAuthenticated && !_publicPaths.contains(path)) return '/login';
+
+    // ── Authenticated guards ─────────────────────────────────────────────────
     // Logged in → can't go back to gateway or login
     if (isAuthenticated && (path == '/' || path == '/login')) {
-      return _roleHome(authState.user?.role ?? 'student');
+      return _roleHome(authState.user!.role);
+    }
+
+    // ── Role enforcement ─────────────────────────────────────────────────────
+    // If a logged-in user is on the WRONG role dashboard, send to correct one.
+    if (isAuthenticated) {
+      final role = authState.user!.role;
+      final correctHome = _roleHome(role);
+      const dashboards = ['/admin', '/faculty', '/student'];
+      final onDashboard = dashboards.any((d) => path.startsWith(d));
+      if (onDashboard && !path.startsWith(correctHome)) {
+        return correctHome;
+      }
     }
 
     return null;

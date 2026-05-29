@@ -134,13 +134,17 @@ class _DeptCard extends StatelessWidget {
       child: GlassCard(
         child: Row(children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            constraints: const BoxConstraints(maxWidth: 72),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(dept.code, style: const TextStyle(color: AppColors.primary,
-                fontWeight: FontWeight.w700, fontSize: 13)),
+            child: Text(dept.code,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.primary,
+                    fontWeight: FontWeight.w700, fontSize: 12)),
           ),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
