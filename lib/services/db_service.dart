@@ -108,8 +108,12 @@ class DbService {
   }
 
   static Future<void> publishTimetable(String id) async {
-    // Deactivate all others first
-    await supabase.from('timetables').update({'is_active': false, 'status': 'archived'});
+    // Archive all OTHER timetables first (neq = not equal, prevents filterless update)
+    await supabase
+        .from('timetables')
+        .update({'is_active': false, 'status': 'archived'})
+        .neq('id', id);
+    // Now publish the target
     await supabase.from('timetables').update({
       'status': 'published',
       'is_active': true,
@@ -180,6 +184,28 @@ class DbService {
 
   static Future<void> insertTimetableEntries(List<Map<String, dynamic>> entries) async {
     await supabase.from('timetable_entries').insert(entries);
+  }
+
+  static Future<List<TimetableEntry>> getEntriesForTimetable(String timetableId) async {
+    final res = await supabase
+        .from('timetable_entries')
+        .select('*, courses(id,name,code,course_type), profiles(id,full_name), classrooms(id,name,building)')
+        .eq('timetable_id', timetableId)
+        .order('day_of_week')
+        .order('start_time');
+    return (res as List).map((j) => TimetableEntry.fromJson(j)).toList();
+  }
+
+  static Future<void> createTimetableEntry(Map<String, dynamic> data) async {
+    await supabase.from('timetable_entries').insert(data);
+  }
+
+  static Future<void> updateTimetableEntry(String id, Map<String, dynamic> data) async {
+    await supabase.from('timetable_entries').update(data).eq('id', id);
+  }
+
+  static Future<void> deleteTimetableEntry(String id) async {
+    await supabase.from('timetable_entries').delete().eq('id', id);
   }
 
   // ── Student Courses ────────────────────────────────────────────────────────

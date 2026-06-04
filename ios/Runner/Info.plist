@@ -4,6 +4,14 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<!-- Attendance system: QR scanner -->
+	<key>NSCameraUsageDescription</key>
+	<string>Schedulify needs camera access to scan the attendance QR code displayed by your faculty.</string>
+	<!-- Attendance system: Geofence -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Schedulify needs your location to verify you are inside the campus before marking attendance.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Schedulify needs your location to verify you are inside the campus before marking attendance.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

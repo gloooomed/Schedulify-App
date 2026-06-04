@@ -5,11 +5,10 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../config/config_store.dart';
 import '../../../services/db_service.dart';
-import '../../../services/supabase_client.dart';
 import '../../../models/models.dart';
 import '../../../shared/widgets/widgets.dart';
+import 'attendance_screen.dart';
 
 class FacultyDashboard extends ConsumerStatefulWidget {
   const FacultyDashboard({super.key});
@@ -56,24 +55,83 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Faculty Dashboard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-          if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-        ]),
-        actions: [
-          if (user != null) RoleBadge(role: user.role),
-          const SizedBox(width: 8),
-          IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
-          const SizedBox(width: 8),
-        ],
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Faculty Dashboard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+          ]),
+          actions: [
+            if (user != null) RoleBadge(role: user.role),
+            const SizedBox(width: 8),
+            IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
+            const SizedBox(width: 8),
+          ],
+          bottom: const TabBar(
+            tabs: [
+              Tab(icon: Icon(Icons.calendar_today_rounded, size: 18), text: 'Schedule'),
+              Tab(icon: Icon(Icons.fact_check_rounded, size: 18), text: 'Attendance'),
+            ],
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textMuted,
+            indicatorColor: AppColors.primary,
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _ScheduleView(
+              loading: _loading,
+              todayEntries: _todayEntries,
+              schedule: _schedule,
+              selectedEntries: _selectedEntries,
+              selectedDay: _selectedDay,
+              focusedDay: _focusedDay,
+              onRefresh: _load,
+              onDaySelected: (sel, foc) => setState(() {
+                _selectedDay = sel;
+                _focusedDay = foc;
+              }),
+            ),
+            const FacultyAttendanceScreen(),
+          ],
+        ),
       ),
-      body: Center(
+    );
+  }
+}
+
+// ── Schedule View (extracted from old body) ─────────────────
+
+class _ScheduleView extends StatelessWidget {
+  final bool loading;
+  final List<TimetableEntry> todayEntries;
+  final List<TimetableEntry> schedule;
+  final List<TimetableEntry> selectedEntries;
+  final DateTime selectedDay;
+  final DateTime focusedDay;
+  final Future<void> Function() onRefresh;
+  final void Function(DateTime, DateTime) onDaySelected;
+
+  const _ScheduleView({
+    required this.loading,
+    required this.todayEntries,
+    required this.schedule,
+    required this.selectedEntries,
+    required this.selectedDay,
+    required this.focusedDay,
+    required this.onRefresh,
+    required this.onDaySelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
           child: RefreshIndicator(
-            onRefresh: _load, color: AppColors.primary,
+            onRefresh: onRefresh,
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -87,16 +145,16 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                           style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
                     ]),
                     const SizedBox(height: 16),
-                    if (_loading)
+                    if (loading)
                       ...List.generate(3, (_) => Padding(padding: const EdgeInsets.only(bottom: 8),
                           child: ShimmerBox(height: 56, radius: 10)))
-                    else if (_todayEntries.isEmpty)
+                    else if (todayEntries.isEmpty)
                       const Center(child: Padding(
                         padding: EdgeInsets.all(16),
                         child: Text('No classes today 🎉', style: TextStyle(color: AppColors.textSecondary)),
                       ))
                     else
-                      ..._todayEntries.map((e) => _ClassSlot(entry: e)),
+                      ...todayEntries.map((e) => _ClassSlot(entry: e)),
                   ]),
                 ),
                 const SizedBox(height: 20),
@@ -112,16 +170,15 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                     ]),
                     const SizedBox(height: 12),
                     TableCalendar(
-                      firstDay: DateTime.utc(2020, 1, 1),
-                      lastDay: DateTime.utc(2030, 12, 31),
-                      focusedDay: _focusedDay,
-                      selectedDayPredicate: (d) => isSameDay(d, _selectedDay),
-                      calendarFormat: CalendarFormat.week,
-                      startingDayOfWeek: StartingDayOfWeek.monday,
-                      eventLoader: (day) => _entriesForDay(day).isNotEmpty ? [true] : [],
-                      onDaySelected: (sel, foc) => setState(() {
-                        _selectedDay = sel; _focusedDay = foc;
-                      }),
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: focusedDay,
+                  selectedDayPredicate: (d) => d.day == selectedDay.day && d.month == selectedDay.month,
+                  eventLoader: (d) {
+                    final wd = d.weekday % 7;
+                    return schedule.where((e) => e.dayOfWeek == wd).toList();
+                  },
+                  onDaySelected: onDaySelected,
                       calendarStyle: const CalendarStyle(
                         defaultTextStyle: TextStyle(color: AppColors.textPrimary),
                         weekendTextStyle: TextStyle(color: AppColors.textSecondary),
@@ -143,11 +200,11 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    if (_selectedEntries.isNotEmpty) ...[
-                      Text(DateFormat('EEEE classes').format(_selectedDay),
+                    if (selectedEntries.isNotEmpty) ...[
+                      Text(DateFormat('EEEE classes').format(selectedDay),
                           style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                       const SizedBox(height: 8),
-                      ..._selectedEntries.map((e) => _ClassSlot(entry: e)),
+                      ...selectedEntries.map((e) => _ClassSlot(entry: e)),
                     ],
                   ]),
                 ),
@@ -160,10 +217,10 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                         color: AppColors.textPrimary, fontSize: 15)),
                     const SizedBox(height: 16),
                     Row(children: [
-                      _MiniStat('Classes', '${_schedule.length}', Icons.class_rounded, AppColors.primary),
-                      _MiniStat('Courses', '${_schedule.map((e) => e.courseId).toSet().length}',
+                      _MiniStat('Classes', '${schedule.length}', Icons.class_rounded, AppColors.primary),
+                      _MiniStat('Courses', '${schedule.map((e) => e.courseId).toSet().length}',
                           Icons.book_rounded, AppColors.info),
-                      _MiniStat('Labs', '${_schedule.where((e) => e.sessionType == 'lab').length}',
+                      _MiniStat('Labs', '${schedule.where((e) => e.sessionType == 'lab').length}',
                           Icons.science_rounded, AppColors.warning),
                     ]),
                   ]),
@@ -172,8 +229,7 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
 
