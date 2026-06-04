@@ -4,11 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../config/config_store.dart';
 import '../../../services/db_service.dart';
-import '../../../services/supabase_client.dart';
 import '../../../models/models.dart';
 import '../../../shared/widgets/widgets.dart';
+import 'attendance_tab.dart';
 
 class StudentDashboard extends ConsumerStatefulWidget {
   const StudentDashboard({super.key});
@@ -59,7 +58,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -75,7 +74,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Schedule', icon: Icon(Icons.calendar_today_rounded, size: 16)),
-              Tab(text: 'Courses', icon: Icon(Icons.book_rounded, size: 16)),
+              Tab(text: 'Courses',  icon: Icon(Icons.book_rounded, size: 16)),
+              Tab(text: 'Attendance', icon: Icon(Icons.fact_check_rounded, size: 16)),
             ],
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textMuted,
@@ -105,6 +105,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                 ),
               ),
             ),
+            const StudentAttendanceTab(),
           ],
         ),
       ),
