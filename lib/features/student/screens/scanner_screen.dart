@@ -59,8 +59,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
           setState(() {
             _step = _Step.error;
             _errorMessage =
-                'You are not inside the campus boundary.\n'
-                'Please enter the building before marking attendance.';
+                'You appear to be outside the campus boundary.\n\n'
+                'Your GPS: ${result.lat.toStringAsFixed(5)}, '
+                '${result.lng.toStringAsFixed(5)}\n'
+                'Accuracy: ±${result.accuracy.toStringAsFixed(0)} m\n\n'
+                'If you are inside the building, ask your admin to expand the geofence, '
+                'or go outdoors for better GPS signal and try again.';
           });
           return;
         }
