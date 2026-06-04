@@ -13,6 +13,8 @@ import '../widgets/classrooms_tab.dart';
 import '../widgets/users_tab.dart';
 import '../widgets/timetables_tab.dart';
 import '../widgets/upload_tab.dart';
+import '../widgets/attendance_admin_tab.dart';
+import '../widgets/geofence_tab.dart';
 
 class AdminShell extends ConsumerStatefulWidget {
   final String initialSection;
@@ -33,14 +35,16 @@ class _AdminShellState extends ConsumerState<AdminShell> {
   }
 
   static const _navItems = [
-    ('overview', Icons.dashboard_rounded, 'Overview'),
-    ('departments', Icons.business_rounded, 'Departments'),
-    ('courses', Icons.book_rounded, 'Courses'),
-    ('faculty', Icons.people_rounded, 'Faculty'),
-    ('students', Icons.school_rounded, 'Students'),
-    ('classrooms', Icons.room_rounded, 'Classrooms'),
-    ('timetables', Icons.calendar_month_rounded, 'Timetables'),
-    ('upload', Icons.upload_file_rounded, 'Upload'),
+    ('overview',    Icons.dashboard_rounded,       'Overview'),
+    ('departments', Icons.business_rounded,         'Departments'),
+    ('courses',     Icons.book_rounded,             'Courses'),
+    ('faculty',     Icons.people_rounded,           'Faculty'),
+    ('students',    Icons.school_rounded,           'Students'),
+    ('classrooms',  Icons.room_rounded,             'Classrooms'),
+    ('timetables',  Icons.calendar_month_rounded,   'Timetables'),
+    ('upload',      Icons.upload_file_rounded,      'Upload'),
+    ('attendance',  Icons.fact_check_rounded,       'Attendance'),
+    ('geofence',    Icons.location_on_rounded,      'Geofence'),
   ];
 
   Future<void> _logout() async {
@@ -205,13 +209,13 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       'overview'    => const OverviewTab(),
       'departments' => const DepartmentsTab(),
       'courses'     => const CoursesTab(),
-      // ValueKey forces Flutter to create a FRESH element when switching
-      // between Faculty and Students — avoids stale-data widget reuse.
       'faculty'     => const UsersTab(key: ValueKey('tab_faculty'), role: 'faculty'),
       'students'    => const UsersTab(key: ValueKey('tab_student'), role: 'student'),
       'classrooms'  => const ClassroomsTab(),
       'timetables'  => const TimetablesTab(),
       'upload'      => const UploadTab(),
+      'attendance'  => const AttendanceAdminTab(),
+      'geofence'    => const GeofenceTab(),
       _             => const OverviewTab(),
     };
   }
