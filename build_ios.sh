@@ -24,7 +24,7 @@ DEFINES_FLAG="--dart-define-from-file=$DEFINES_FILE"
 # ── Validate dart_defines.json ───────────────────────────────────────────────
 if [[ ! -f "$DEFINES_FILE" ]]; then
   echo ""
-  echo "  ❌  dart_defines.json not found at: $DEFINES_FILE"
+  echo "  dart_defines.json not found at: $DEFINES_FILE"
   echo ""
   echo "  Create it from the template:"
   echo "    cp .env.example dart_defines.json"
@@ -59,7 +59,7 @@ case "$COMMAND" in
       "$DEFINES_FLAG" \
       "$@"
     echo ""
-    echo "  ✅  IPA built → build/ios/ipa/"
+    echo "  IPA built → build/ios/ipa/"
     ;;
 
   *)
