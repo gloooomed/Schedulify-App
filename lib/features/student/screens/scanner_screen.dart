@@ -1,18 +1,21 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../core/providers/auth_provider.dart';
-import '../../../core/providers/attendance_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/attendance_models.dart';
 import '../../../services/attendance_service.dart';
+import '../../../services/geofence_service.dart';
 import '../../../services/qr_hash_service.dart';
 import '../../../shared/widgets/widgets.dart';
 
 /// Scanner screen — student flow:
 /// Step 1: Location check (geofence)
-/// Step 2: QR scan
-/// Step 3: Result
+/// Step 2: Camera permission
+/// Step 3: QR scan
+/// Step 4: Result
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
 
@@ -25,8 +28,9 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   String? _errorMessage;
   bool _success = false;
   bool _submitting = false;
+  bool _scanned = false;
   GeofenceResult? _geoResult;
-  MobileScannerController? _scannerCtrl;
+  Timer? _timeoutTimer;
 
   @override
   void initState() {
@@ -34,101 +38,179 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     _doGeofenceCheck();
   }
 
-  Future<void> _doGeofenceCheck() async {
-    setState(() { _step = _Step.checking; _errorMessage = null; });
-    ref.read(geofenceCheckProvider.notifier).check();
-    // Listen after triggering
-    ref.listenManual(geofenceCheckProvider, (_, next) {
-      if (!mounted) return;
-      next.whenData((result) {
-        if (result == null) {
-          setState(() {
-            _step = _Step.error;
-            _errorMessage = 'Could not get location. Please grant location permission.';
-          });
-          return;
-        }
-        if (result.isMocked) {
-          setState(() {
-            _step = _Step.error;
-            _errorMessage = 'Mock/fake GPS detected. Real location required.';
-          });
-          return;
-        }
-        if (!result.isInside) {
-          setState(() {
-            _step = _Step.error;
-            _errorMessage =
-                'You appear to be outside the campus boundary.\n\n'
-                'Your GPS: ${result.lat.toStringAsFixed(5)}, '
-                '${result.lng.toStringAsFixed(5)}\n'
-                'Accuracy: ±${result.accuracy.toStringAsFixed(0)} m\n\n'
-                'If you are inside the building, ask your admin to expand the geofence, '
-                'or go outdoors for better GPS signal and try again.';
-          });
-          return;
-        }
-        _geoResult = result;
-        _openScanner();
-      });
-    });
+  @override
+  void dispose() {
+    _timeoutTimer?.cancel();
+    super.dispose();
   }
 
-  void _openScanner() {
-    _scannerCtrl = MobileScannerController();
-    setState(() => _step = _Step.scanning);
+  // ── Step 1: Geofence ──────────────────────────────────────
+
+  Future<void> _doGeofenceCheck() async {
+    if (!mounted) return;
+    setState(() {
+      _step = _Step.checking;
+      _errorMessage = null;
+      _scanned = false;
+    });
+
+    _timeoutTimer?.cancel();
+    _timeoutTimer = Timer(const Duration(seconds: 20), () {
+      if (mounted && _step == _Step.checking) {
+        setState(() {
+          _step = _Step.error;
+          _errorMessage =
+              'Location check timed out (20s).\n\n'
+              'Emulator: set a mock GPS in Extended Controls → Location.\n'
+              'Real device: enable Location and try outdoors.';
+        });
+      }
+    });
+
+    try {
+      final result = await GeofenceService.checkPresence();
+      _timeoutTimer?.cancel();
+      if (!mounted) return;
+
+      if (result == null) {
+        setState(() {
+          _step = _Step.error;
+          _errorMessage = 'Could not get location.\n'
+              'Grant Location permission in Settings → Apps → Schedulify → Permissions.';
+        });
+        return;
+      }
+      if (result.isMocked) {
+        setState(() {
+          _step = _Step.error;
+          _errorMessage = 'Fake GPS detected. Real location required.';
+        });
+        return;
+      }
+      if (!result.isInside) {
+        setState(() {
+          _step = _Step.error;
+          _errorMessage =
+              'You are outside the campus boundary.\n\n'
+              'GPS: ${result.lat.toStringAsFixed(5)}, ${result.lng.toStringAsFixed(5)}\n'
+              'Accuracy: ±${result.accuracy.toStringAsFixed(0)} m\n\n'
+              'Ask your admin to expand the geofence if you are inside.';
+        });
+        return;
+      }
+
+      _geoResult = result;
+      // Step 2: request camera permission explicitly
+      await _requestCameraPermission();
+    } catch (e) {
+      _timeoutTimer?.cancel();
+      if (!mounted) return;
+      setState(() {
+        _step = _Step.error;
+        _errorMessage = 'Location error: $e';
+      });
+    }
   }
+
+  // ── Step 2: Camera permission ─────────────────────────────
+
+  Future<void> _requestCameraPermission() async {
+    if (!mounted) return;
+
+    // Check current status
+    var status = await Permission.camera.status;
+
+    if (status.isGranted) {
+      // Already granted → go straight to scanner
+      setState(() => _step = _Step.scanning);
+      return;
+    }
+
+    if (status.isPermanentlyDenied) {
+      // User permanently denied → direct to settings
+      setState(() {
+        _step = _Step.error;
+        _errorMessage =
+            'Camera permission was permanently denied.\n\n'
+            'Go to Settings → Apps → Schedulify → Permissions → Camera → Allow.';
+      });
+      return;
+    }
+
+    // Request at runtime
+    status = await Permission.camera.request();
+    if (!mounted) return;
+
+    if (status.isGranted) {
+      setState(() => _step = _Step.scanning);
+    } else if (status.isPermanentlyDenied) {
+      setState(() {
+        _step = _Step.error;
+        _errorMessage =
+            'Camera permission denied.\n\n'
+            'Go to Settings → Apps → Schedulify → Permissions → Camera → Allow,\n'
+            'then tap Try Again.';
+      });
+    } else {
+      setState(() {
+        _step = _Step.error;
+        _errorMessage = 'Camera permission is required to scan the QR code.\nTap Try Again to allow it.';
+      });
+    }
+  }
+
+  // ── Step 3: QR scan result ────────────────────────────────
 
   Future<void> _onQrDetect(BarcodeCapture capture) async {
-    if (_submitting) return;
+    if (_submitting || _scanned) return;
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null) return;
 
     final payload = QrHashService.parsePayload(raw);
     if (payload == null) return;
 
+    _scanned = true;
     setState(() => _submitting = true);
-    _scannerCtrl?.stop();
 
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    final res = await AttendanceService.markAttendance(
-      sessionId: payload.sessionId,
-      studentId: user.id,
-      qrHash: payload.hash,
-      lat: _geoResult!.lat,
-      lng: _geoResult!.lng,
-      isMocked: _geoResult!.isMocked,
-    );
-
-    if (!mounted) return;
-    if (res['success'] == true) {
-      setState(() { _step = _Step.result; _success = true; });
-    } else {
-      final errCode = res['error'] as String? ?? 'unknown';
+    try {
+      final res = await AttendanceService.markAttendance(
+        sessionId: payload.sessionId,
+        studentId: user.id,
+        qrHash: payload.hash,
+        lat: _geoResult!.lat,
+        lng: _geoResult!.lng,
+        isMocked: _geoResult!.isMocked,
+      );
+      if (!mounted) return;
+      if (res['success'] == true) {
+        setState(() { _step = _Step.result; _success = true; });
+      } else {
+        setState(() {
+          _step = _Step.result;
+          _success = false;
+          _errorMessage = _friendlyError(res['error'] as String? ?? 'unknown');
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
       setState(() {
         _step = _Step.result;
         _success = false;
-        _errorMessage = _friendlyError(errCode);
+        _errorMessage = 'Network error. Try again.\n$e';
       });
     }
-    _scannerCtrl?.dispose();
   }
 
   String _friendlyError(String code) => switch (code) {
-    'mock_location'     => 'GPS spoofing detected.',
-    'session_not_active'=> 'Session is no longer active.',
-    'invalid_qr'        => 'QR code expired. Ask the faculty to show the latest code.',
-    'already_marked'    => 'You have already marked attendance for this session.',
-    _                   => 'Something went wrong. Try again.',
+    'mock_location'      => 'GPS spoofing detected.',
+    'session_not_active' => 'Session is no longer active.',
+    'invalid_qr'         => 'QR code expired. Ask faculty to display the latest code.',
+    'already_marked'     => 'You have already marked attendance for this session.',
+    _                    => 'Something went wrong ($code). Try again.',
   };
-
-  @override
-  void dispose() {
-    _scannerCtrl?.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -137,9 +219,12 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
       _Step.checking => _CheckingView(),
       _Step.error    => _ErrorView(
           message: _errorMessage ?? 'Unknown error',
-          onRetry: _doGeofenceCheck),
+          onRetry: _doGeofenceCheck,
+          onOpenSettings: _step == _Step.error &&
+              (_errorMessage?.contains('permanently') ?? false)
+              ? openAppSettings
+              : null),
       _Step.scanning => _ScannerView(
-          controller: _scannerCtrl!,
           onDetect: _onQrDetect,
           submitting: _submitting),
       _Step.result   => _ResultView(
@@ -154,15 +239,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
 class _CheckingView extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => Center(
+  Widget build(BuildContext context) => const Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const CircularProgressIndicator(),
-      const SizedBox(height: 24),
-      const Text('Verifying your location…',
+      CircularProgressIndicator(),
+      SizedBox(height: 24),
+      Text('Verifying your location…',
           style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
-      const SizedBox(height: 8),
-      Text('GPS check in progress', style: TextStyle(
-          color: AppColors.textSecondary, fontSize: 13)),
+      SizedBox(height: 8),
+      Text('GPS check in progress',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
     ]),
   );
 }
@@ -170,7 +255,8 @@ class _CheckingView extends StatelessWidget {
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-  const _ErrorView({required this.message, required this.onRetry});
+  final VoidCallback? onOpenSettings;
+  const _ErrorView({required this.message, required this.onRetry, this.onOpenSettings});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -180,19 +266,20 @@ class _ErrorView extends StatelessWidget {
         Container(
           width: 80, height: 80,
           decoration: BoxDecoration(
-            color: AppColors.danger.withOpacity(0.15),
+            color: AppColors.danger.withAlpha(38),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.location_off_rounded,
               color: AppColors.danger, size: 40),
         ),
         const SizedBox(height: 24),
-        Text('Cannot Check In', style: TextStyle(
-            color: AppColors.textPrimary, fontSize: 18,
-            fontWeight: FontWeight.w700)),
+        const Text('Cannot Check In',
+            style: TextStyle(color: AppColors.textPrimary,
+                fontSize: 18, fontWeight: FontWeight.w700)),
         const SizedBox(height: 12),
-        Text(message, textAlign: TextAlign.center,
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+        Text(message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
         const SizedBox(height: 32),
         PrimaryButton(
           label: 'Try Again',
@@ -200,23 +287,51 @@ class _ErrorView extends StatelessWidget {
           width: double.infinity,
           onPressed: onRetry,
         ),
+        if (onOpenSettings != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onOpenSettings,
+            icon: const Icon(Icons.settings_rounded, size: 16),
+            label: const Text('Open App Settings'),
+          ),
+        ],
       ]),
     ),
   );
 }
 
 class _ScannerView extends StatelessWidget {
-  final MobileScannerController controller;
   final void Function(BarcodeCapture) onDetect;
   final bool submitting;
-  const _ScannerView({required this.controller, required this.onDetect,
-      required this.submitting});
+  const _ScannerView({required this.onDetect, required this.submitting});
 
   @override
   Widget build(BuildContext context) => Stack(
     children: [
-      MobileScanner(controller: controller, onDetect: onDetect),
-      // Overlay
+      MobileScanner(
+        onDetect: onDetect,
+        errorBuilder: (ctx, error, child) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              const Icon(Icons.camera_alt_outlined,
+                  color: AppColors.danger, size: 48),
+              const SizedBox(height: 16),
+              const Text('Camera Error',
+                  style: TextStyle(color: AppColors.textPrimary,
+                      fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Text(
+                'Code: ${error.errorCode.name}\n\n'
+                'Try closing other camera apps and tap the back button and try again.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    color: AppColors.textSecondary, fontSize: 13),
+              ),
+            ]),
+          ),
+        ),
+      ),
       Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(
@@ -242,7 +357,7 @@ class _ScannerView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.8),
+              color: AppColors.success.withAlpha(204),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Row(mainAxisSize: MainAxisSize.min, children: [
@@ -276,8 +391,7 @@ class _ResultView extends StatelessWidget {
         Container(
           width: 100, height: 100,
           decoration: BoxDecoration(
-            color: (success ? AppColors.success : AppColors.danger)
-                .withOpacity(0.15),
+            color: (success ? AppColors.success : AppColors.danger).withAlpha(38),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -289,9 +403,8 @@ class _ResultView extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           success ? 'Attendance Marked!' : 'Check-In Failed',
-          style: TextStyle(
-              color: AppColors.textPrimary, fontSize: 22,
-              fontWeight: FontWeight.w800),
+          style: const TextStyle(color: AppColors.textPrimary,
+              fontSize: 22, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
         Text(
