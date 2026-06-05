@@ -1,4 +1,3 @@
-// Domain models mirroring the Supabase schema
 
 class Profile {
   final String id;
@@ -38,7 +37,6 @@ class Profile {
   String get fullName => lastName.isEmpty ? firstName : '$firstName $lastName';
 
   factory Profile.fromJson(Map<String, dynamic> j) {
-    // Support both full_name (new schema) and first_name/last_name (legacy)
     String firstName;
     String lastName;
     if (j['full_name'] != null) {

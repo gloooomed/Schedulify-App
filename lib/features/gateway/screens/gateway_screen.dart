@@ -8,7 +8,6 @@ import '../../../config/config_store.dart';
 import '../../../services/supabase_client.dart';
 import '../../../shared/widgets/widgets.dart';
 
-// Baked-in college credentials (set via --dart-define-from-file)
 const _builtInUrl    = String.fromEnvironment('COLLEGE_SUPABASE_URL',  defaultValue: '');
 const _builtInKey    = String.fromEnvironment('COLLEGE_SUPABASE_ANON_KEY', defaultValue: '');
 const _builtInName   = String.fromEnvironment('COLLEGE_NAME',  defaultValue: '');
@@ -29,7 +28,6 @@ class _GatewayScreenState extends State<GatewayScreen> {
   @override
   void initState() {
     super.initState();
-    // If college creds are baked into the build, skip the lookup entirely
     if (_builtInUrl.isNotEmpty && _builtInKey.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _autoConnect());
     }
@@ -45,7 +43,6 @@ class _GatewayScreenState extends State<GatewayScreen> {
       setupComplete:   true,
     ));
     SupabaseClientManager.instance.reset();
-    // Small delay to let SharedPreferences flush before navigation
     await Future.delayed(const Duration(milliseconds: 100));
     if (mounted) context.go('/login');
   }
@@ -96,7 +93,6 @@ class _GatewayScreenState extends State<GatewayScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Logo
                     Container(
                       width: 72, height: 72,
                       decoration: BoxDecoration(
@@ -117,7 +113,6 @@ class _GatewayScreenState extends State<GatewayScreen> {
                         .animate().fadeIn(delay: 300.ms),
                     const SizedBox(height: 48),
 
-                    // Card
                     GlassCard(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

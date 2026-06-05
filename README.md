@@ -1,20 +1,18 @@
 <h1 align="center">Schedulify</h1>
 
 <p align="center">
-  AI-powered college timetable management. Multi-tenant, conflict-free, and built for scale.
+  College attendance and timetable management — built for real institutions.
 </p>
 
 <p align="center">
-  <a href="https://github.com/gloooomed/Schedulify-App/issues/new?labels=bug">Report Bug</a>
-  ·
-  <a href="https://github.com/gloooomed/Schedulify-App/issues/new?labels=enhancement">Request Feature</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/gloooomed/Schedulify-App/forks">
-    <img src="https://img.shields.io/github/forks/gloooomed/Schedulify-App?style=for-the-badge&labelColor=0A0F1E&color=3B82F6&label=FORKS" alt="Forks" />
+  <a href="#">
+    <img src="https://img.shields.io/badge/VERSION-0.2.2-3B82F6?style=for-the-badge&labelColor=0A0F1E" alt="Version" />
+  </a>
   <a href="#">
     <img src="https://img.shields.io/badge/PLATFORM-Android-8B5CF6?style=for-the-badge&labelColor=0A0F1E" alt="Platform" />
+  </a>
+  <a href="#">
+    <img src="https://img.shields.io/badge/STATUS-Active-10B981?style=for-the-badge&labelColor=0A0F1E" alt="Status" />
   </a>
 </p>
 
@@ -32,11 +30,36 @@
 
 ## What it does
 
-- **Multi-Tenant Architecture** - Each college gets its own isolated Supabase project. One app, many institutions, zero data bleed.
-- **AI Schedule Parsing** - Upload a CSV or paste raw text. Groq's LLaMA model parses it, detects conflicts, and saves structured timetable entries.
-- **Role-Based Dashboards** - Admins manage everything. Faculty see their classes. Students see their schedule. Each role gets exactly what they need.
-- **Setup Wizard** - New colleges onboard themselves in 5 steps. No backend intervention required.
-- **Live Conflict Detection** - The AI flags scheduling conflicts before entries are saved, preventing double-bookings automatically.
+Schedulify is a closed-source mobile application built for colleges to manage timetables and track student attendance using GPS-enforced, QR-based check-ins.
+
+**Admin**
+- Onboard a new college in 5 steps — no backend setup required
+- Manage departments, courses, classrooms, faculty, and students
+- Upload or AI-parse timetable data from CSV/text
+- Draw a geofence polygon on a live map to define the campus boundary
+- View live attendance sessions and audit logs
+
+**Faculty**
+- See daily schedule and today's classes
+- Start an attendance session — a rotating QR code is displayed for students to scan
+- End the session and view the attendance record
+
+**Student**
+- View enrolled courses and weekly timetable
+- Mark attendance by scanning the faculty's QR code
+- Location is verified against the campus geofence before the scanner opens
+- Attendance history is visible per course
+
+---
+
+## Supported Devices
+
+| Platform | Minimum Version | Notes |
+|---|---|---|
+| Android | Android 5.0 (API 21) | Primary supported platform |
+| iOS | Not yet supported | Planned for a future release |
+
+> GPS and camera permissions are required for attendance marking.
 
 ---
 
@@ -44,108 +67,46 @@
 
 | Category | Technology |
 |---|---|
-| Framework | [![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev) [![Dart](https://img.shields.io/badge/Dart-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev) |
-| State Management | [![Riverpod](https://img.shields.io/badge/Riverpod-00BCD4?style=for-the-badge&logo=dart&logoColor=white)](https://riverpod.dev) |
-| Navigation | [![GoRouter](https://img.shields.io/badge/GoRouter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/go_router) |
-| Backend | [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com) |
-| AI | [![Groq](https://img.shields.io/badge/Groq_LLaMA-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com) |
-| Animations | [![Flutter Animate](https://img.shields.io/badge/Flutter_Animate-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://pub.dev/packages/flutter_animate) |
+| Framework | Flutter · Dart |
+| State Management | Riverpod |
+| Navigation | GoRouter |
+| Backend | Supabase (per-college isolated projects) |
+| AI Parsing | Groq LLaMA |
+| QR Scanning | barcode_scan2 (native ZXing) |
+| Geofencing | geolocator · maps_toolkit |
+| Animations | flutter_animate |
 
 ---
 
-## Getting Started
+## Architecture
 
-```bash
-git clone https://github.com/gloooomed/Schedulify-App.git
-cd Schedulify-App
-flutter pub get
-```
-
-Create a `dart_defines.json` file in the project root:
-
-```json
-{
-  "VENDOR_SUPABASE_URL": "https://your-vendor-project.supabase.co",
-  "VENDOR_SUPABASE_ANON_KEY": "your_vendor_anon_key",
-  "VENDOR_ACCESS_CODE": "your_access_code",
-  "GROQ_API_KEY": "your_groq_key"
-}
-```
-
-```bash
-flutter run --dart-define-from-file=dart_defines.json
-```
+- **Multi-tenant** — each college has its own isolated Supabase project. A central vendor registry maps college IDs to credentials.
+- **GPS-enforced attendance** — geofence is drawn by the admin. Students outside the boundary cannot open the scanner. Mock GPS is rejected.
+- **Rotating QR hashes** — the QR code changes every 5 seconds using a deterministic SHA-256 hash shared between the app and the Supabase RPC. Screenshot sharing cannot be used for proxy attendance.
+- **Role-based routing** — admin, faculty, and student each land on a separate dashboard with isolated permissions.
 
 ---
 
-## Project Structure
+## What's New in 0.2.2
 
-```
-Schedulify-App/
-├── lib/
-│   ├── main.dart                          # App entry + Supabase + Riverpod init
-│   ├── config/
-│   │   └── config_store.dart              # SharedPreferences college config
-│   ├── core/
-│   │   ├── theme/app_theme.dart           # Dark glassmorphic design system
-│   │   ├── providers/auth_provider.dart   # Riverpod auth state notifier
-│   │   └── router/app_router.dart         # GoRouter with role-based guards
-│   ├── models/models.dart                 # All domain models
-│   ├── services/
-│   │   ├── supabase_client.dart           # Dynamic multi-tenant Supabase proxy
-│   │   ├── vendor_registry.dart           # Central college registry service
-│   │   ├── groq_service.dart              # AI schedule parsing via Groq
-│   │   ├── db_service.dart                # Full CRUD database layer
-│   │   └── student_service.dart           # Student enrollment helpers
-│   ├── shared/widgets/widgets.dart        # GlassCard, StatCard, PrimaryButton, etc.
-│   └── features/
-│       ├── gateway/                       # College ID entry screen
-│       ├── auth/                          # Login screen
-│       ├── setup/                         # 5-step onboarding wizard
-│       ├── admin/                         # Admin shell + 8 module tabs
-│       ├── faculty/                       # Faculty dashboard + TableCalendar
-│       └── student/                       # Student schedule + courses view
-├── android/                               # Android build configuration
-├── assets/images/                         # App logo and static assets
-├── .env.example                           # Environment variable template
-└── dart_defines.json                      # ← gitignored, never commit this
-```
+- Geofence now **fails closed** — if no polygon is configured, attendance is blocked (previously allowed everyone through)
+- GPS buffer changed from a fixed 60 m to a **dynamic accuracy-based buffer** capped at 20 m — matches the device's reported GPS error margin
+- Replaced `flutter_barcode_scanner` (abandoned, jcenter-dependent) with `barcode_scan2` (native ZXing, Gradle 9 compatible)
+- Fixed Gradle duplicate class error caused by legacy Android support library
+- Removed all unnecessary comments from the codebase
 
 ---
 
-## Contributing
+## Coming in the Next Update
 
-### Prerequisites
-
-| Requirement | Version | Notes |
-|---|---|---|
-| [Flutter](https://flutter.dev/docs/get-started/install) | 3.32+ | Stable channel |
-| [Android Studio](https://developer.android.com/studio) | Latest | For emulator + SDK |
-| [Groq API Key](https://console.groq.com/keys) | - | Free tier works |
-| [Supabase Account](https://supabase.com) | - | Free plan sufficient |
-
-### Steps
-
-1. **Fork** the repository
-2. **Create a branch** for your feature:
-   ```bash
-   git checkout -b feat/your-feature-name
-   ```
-3. **Commit** with a clear message:
-   ```bash
-   git commit -m "feat: describe your change"
-   ```
-4. **Push** and open a Pull Request against `main`
-
-### Guidelines
-- One feature or fix per PR
-- Follow existing Dart/Flutter conventions
-- For larger changes, open an issue first
+- iOS support
+- Student enrollment management from the admin panel
+- Attendance analytics dashboard with per-course percentage breakdowns
+- Push notifications for session start/end
+- Offline grace period for poor connectivity environments
 
 ---
 
 <p align="center">
-  <em>Built for colleges. Runs everywhere Android does.</em>
+  <em>Built for colleges. Runs on Android.</em>
 </p>
-
-<!-- v1.0.0 -->

@@ -10,7 +10,6 @@ import '../../../services/supabase_client.dart';
 import '../../../config/config_store.dart';
 import '../../../shared/widgets/widgets.dart';
 
-// SQL schema to create in the college's Supabase project
 const _schemaSql = '''
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -153,8 +152,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   void _next() => setState(() { _step++; _error = null; });
   void _err(String e) => setState(() { _error = e; _isLoading = false; });
 
-  // ── Step handlers ──────────────────────────────────────────────────────────
-
   Future<void> _verifyCode() async {
     if (_accessCode.text.trim().isEmpty) { _err('Enter the access code.'); return; }
     final ok = VendorRegistry.instance.verifyAccessCode(_accessCode.text.trim());
@@ -194,9 +191,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         body: jsonEncode({'sql': _schemaSql}),
       ).timeout(const Duration(seconds: 20));
 
-      // exec_sql RPC may not exist — fall back to showing SQL manually
       if (res.statusCode == 404 || res.statusCode == 400) {
-        // Try the pg meta endpoint used by Supabase Studio internally
         final res2 = await http.post(
           Uri.parse('$base/pg/query'),
           headers: {
@@ -207,14 +202,12 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
           body: jsonEncode({'query': _schemaSql}),
         ).timeout(const Duration(seconds: 20));
         if (res2.statusCode > 299) {
-          // Both failed — schema must be run manually
           setState(() { _schemaCreated = true; _isLoading = false; });
           return;
         }
       }
       setState(() { _schemaCreated = true; _isLoading = false; });
     } catch (_) {
-      // Network error — still mark done so wizard continues (schema may already exist)
       setState(() { _schemaCreated = true; _isLoading = false; });
     }
   }
@@ -226,7 +219,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     setState(() { _isLoading = true; _error = null; });
     try {
       final base = _supabaseUrl.text.trim().replaceAll(RegExp(r'/$'), '');
-      // Create user via Supabase Auth Admin API (requires service role key)
       final authRes = await http.post(
         Uri.parse('$base/auth/v1/admin/users'),
         headers: {
@@ -247,7 +239,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       }
       final userId = jsonDecode(authRes.body)['id'] as String;
 
-      // Insert profile record
       await http.post(
         Uri.parse('$base/rest/v1/profiles'),
         headers: {
@@ -294,8 +285,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       _err(e.toString());
     }
   }
-
-  // ── Build ──────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +368,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     _ => _buildDone(),
   };
 
-  // ── Step 1: Access Code ────────────────────────────────────────────────────
   Widget _buildAccessCode() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 36),
@@ -398,7 +386,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 2: College Info ───────────────────────────────────────────────────
   Widget _buildCollegeInfo() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.school_rounded, color: AppColors.primary, size: 36),
@@ -421,7 +408,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 3: Supabase Config ────────────────────────────────────────────────
   Widget _buildSupabaseConfig() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.cloud_outlined, color: AppColors.primary, size: 36),
@@ -473,7 +459,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 4: Schema Setup ───────────────────────────────────────────────────
   Widget _buildSchemaSetup() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.storage_rounded, color: AppColors.primary, size: 36),
@@ -486,7 +471,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
       ),
       const SizedBox(height: 20),
-      // Show SQL for transparency
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -531,7 +515,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 5: Admin Account ──────────────────────────────────────────────────
   Widget _buildAdminAccount() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.manage_accounts_rounded, color: AppColors.primary, size: 36),
@@ -564,7 +547,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 6: Register ───────────────────────────────────────────────────────
   Widget _buildRegistration() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.rocket_launch_rounded, color: AppColors.primary, size: 36),
@@ -586,7 +568,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Step 7: Done ───────────────────────────────────────────────────────────
   Widget _buildDone() => GlassCard(
     child: Column(children: [
       const Icon(Icons.celebration_rounded, color: AppColors.success, size: 52),
@@ -626,7 +607,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   Widget _successBanner(String msg) => Container(
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(

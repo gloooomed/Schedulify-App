@@ -70,6 +70,7 @@ class _DepartmentsTabState extends State<DepartmentsTab> {
                 }
                 if (mounted) { Navigator.pop(context); _load(); }
               } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(e.toString())));
               }

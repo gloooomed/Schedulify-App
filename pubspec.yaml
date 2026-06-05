@@ -1,7 +1,7 @@
 name: schedulify
 description: "Multi-tenant college scheduling SaaS"
 publish_to: 'none'
-version: 1.0.0+1
+version: 0.2.1+2
 
 environment:
   sdk: ^3.12.0
@@ -47,7 +47,7 @@ dependencies:
   # Attendance system
   geolocator: ^13.0.2
   maps_toolkit: ^3.1.0
-  mobile_scanner: ^5.2.3
+  barcode_scan2: ^4.3.3
   qr_flutter: ^4.1.0
   crypto: ^3.0.5
   flutter_map: ^7.0.2
@@ -71,6 +71,4 @@ flutter:
   assets:
     - assets/images/
 
-# dependency_overrides pinned for SDK compatibility
 
-# v1.0.0 - initial public release

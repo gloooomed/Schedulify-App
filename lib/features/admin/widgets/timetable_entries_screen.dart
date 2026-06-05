@@ -81,7 +81,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
             width: 440,
             child: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                // Day selector
                 DropdownButtonFormField<int>(
                   value: day,
                   dropdownColor: AppColors.bgCard,
@@ -92,7 +91,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   onChanged: (v) => setSt(() => day = v!),
                 ),
                 const SizedBox(height: 12),
-                // Course
                 DropdownButtonFormField<String>(
                   value: courseId,
                   dropdownColor: AppColors.bgCard,
@@ -106,7 +104,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   onChanged: (v) => setSt(() => courseId = v),
                 ),
                 const SizedBox(height: 12),
-                // Faculty
                 DropdownButtonFormField<String>(
                   value: facultyId,
                   dropdownColor: AppColors.bgCard,
@@ -121,7 +118,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   onChanged: (v) => setSt(() => facultyId = v),
                 ),
                 const SizedBox(height: 12),
-                // Classroom
                 DropdownButtonFormField<String>(
                   value: classroomId,
                   dropdownColor: AppColors.bgCard,
@@ -138,14 +134,12 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   onChanged: (v) => setSt(() => classroomId = v),
                 ),
                 const SizedBox(height: 12),
-                // Time row
                 Row(children: [
                   Expanded(child: _timeField(startCtrl, 'Start Time', ctx)),
                   const SizedBox(width: 12),
                   Expanded(child: _timeField(endCtrl, 'End Time', ctx)),
                 ]),
                 const SizedBox(height: 12),
-                // Session type
                 DropdownButtonFormField<String>(
                   value: type,
                   dropdownColor: AppColors.bgCard,
@@ -156,7 +150,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   onChanged: (v) => setSt(() => type = v!),
                 ),
                 const SizedBox(height: 12),
-                // Student group
                 TextFormField(
                   controller: groupCtrl,
                   style: const TextStyle(color: AppColors.textPrimary),
@@ -195,8 +188,9 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                   } else {
                     await DbService.updateTimetableEntry(entry.id, data);
                   }
-                  if (mounted) { Navigator.pop(ctx); _load(); }
+                  if (ctx.mounted) { Navigator.pop(ctx); _load(); }
                 } catch (e) {
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Error: $e')));
                 }
@@ -309,7 +303,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
         label: const Text('Add Slot'),
       ),
       body: Column(children: [
-        // ── Day Tabs ──────────────────────────────────────────
         Container(
           color: AppColors.bgCard,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -351,7 +344,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
             }),
           ),
         ),
-        // ── Entry List ────────────────────────────────────────
         Expanded(child: _loading
           ? const Center(child: CircularProgressIndicator())
           : _dayEntries.isEmpty
@@ -383,8 +375,6 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
   }
 }
 
-// ── Entry Card ────────────────────────────────────────────────
-
 class _EntryCard extends StatelessWidget {
   final TimetableEntry entry;
   final VoidCallback onEdit;
@@ -401,7 +391,6 @@ class _EntryCard extends StatelessWidget {
     return GlassCard(
       padding: const EdgeInsets.all(14),
       child: Row(children: [
-        // Time column
         Container(
           width: 62,
           padding: const EdgeInsets.symmetric(vertical: 8),

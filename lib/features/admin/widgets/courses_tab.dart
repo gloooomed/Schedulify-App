@@ -124,6 +124,7 @@ class _CoursesTabState extends State<CoursesTab> {
                     else await DbService.updateCourse(course.id, data);
                     if (mounted) { Navigator.pop(context); _load(); }
                   } catch (e) {
+                    if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                   }
                 }),
@@ -146,7 +147,6 @@ class _CoursesTabState extends State<CoursesTab> {
         children: [
           PageHeader(title: 'Courses', subtitle: '${filtered.length} courses'),
           const SizedBox(height: 16),
-          // Filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(children: [

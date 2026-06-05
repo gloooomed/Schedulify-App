@@ -111,7 +111,6 @@ class _UploadTabState extends State<UploadTab> {
         const PageHeader(title: 'AI Schedule Upload',
             subtitle: 'Upload CSV/text — AI parses & saves entries'),
         const SizedBox(height: 24),
-        // Step indicator
         Row(children: List.generate(3, (i) {
           final active = i <= _step;
           return Expanded(child: Row(children: [
@@ -289,4 +288,3 @@ class _UploadTabState extends State<UploadTab> {
   );
 }
 
-// FilePicker: withData=true ensures bytes loaded on Android

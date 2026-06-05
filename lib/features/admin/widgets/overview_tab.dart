@@ -79,7 +79,6 @@ class _OverviewTabState extends State<OverviewTab> {
       ('Classrooms', '${_stats?['classrooms'] ?? 0}', Icons.room_rounded, AppColors.warning),
       ('Users', '${_stats?['users'] ?? 0}', Icons.people_rounded, AppColors.success),
     ];
-    // Responsive: 4 columns on web/tablet, 2 on mobile
     return LayoutBuilder(builder: (_, constraints) {
       final isWide = constraints.maxWidth > 600;
       return GridView.builder(

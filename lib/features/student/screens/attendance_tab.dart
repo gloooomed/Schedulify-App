@@ -22,7 +22,6 @@ class StudentAttendanceTab extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // ── Scan button ─────────────────────────────────
           GlassCard(
             child: Column(children: [
               const Icon(Icons.qr_code_scanner_rounded,
@@ -58,7 +57,6 @@ class StudentAttendanceTab extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // ── Summary ─────────────────────────────────────
           historyAsync.when(
             loading: () => Column(children: List.generate(4,
                 (_) => Padding(padding: const EdgeInsets.only(bottom: 10),
@@ -84,7 +82,6 @@ class StudentAttendanceTab extends ConsumerWidget {
               return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                // Stats card
                 GlassCard(
                   child: Row(children: [
                     _StatPill('Total', '$total', AppColors.primary),

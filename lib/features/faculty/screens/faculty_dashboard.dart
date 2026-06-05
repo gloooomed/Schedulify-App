@@ -102,8 +102,6 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   }
 }
 
-// ── Schedule View (extracted from old body) ─────────────────
-
 class _ScheduleView extends StatelessWidget {
   final bool loading;
   final List<TimetableEntry> todayEntries;
@@ -135,7 +133,6 @@ class _ScheduleView extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Today's classes
                 GlassCard(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Row(children: [
@@ -159,7 +156,6 @@ class _ScheduleView extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Weekly calendar
                 GlassCard(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Row(children: [
@@ -210,7 +206,6 @@ class _ScheduleView extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Weekly stats
                 GlassCard(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     const Text('This Week', style: TextStyle(fontWeight: FontWeight.w700,

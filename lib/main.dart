@@ -8,10 +8,8 @@ import 'services/vendor_registry.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Init config store (SharedPreferences)
   await ConfigStore.instance.init();
 
-  // Init vendor registry (central Supabase)
   VendorRegistry.instance.init();
 
   runApp(const ProviderScope(child: SchedulifyApp()));

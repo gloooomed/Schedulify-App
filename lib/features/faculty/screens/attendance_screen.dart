@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/providers/attendance_provider.dart';
 import '../../../core/theme/app_theme.dart';
@@ -57,13 +56,11 @@ class _FacultyAttendanceScreenState
     final user = ref.read(currentUserProvider);
     if (user == null) return;
 
-    // Check if session already exists
     final existing = _todaySessions
         .where((s) => s.timetableEntryId == entry.id && s.isActive)
         .firstOrNull;
 
     if (existing != null) {
-      // Restore existing session
       ref.read(activeSessionProvider.notifier).restore(existing);
     } else {
       await ref.read(activeSessionProvider.notifier).start(
@@ -81,7 +78,6 @@ class _FacultyAttendanceScreenState
         fullscreenDialog: true,
       ),
     );
-    // Refresh on return
     await Future.delayed(const Duration(milliseconds: 300));
     _load();
   }

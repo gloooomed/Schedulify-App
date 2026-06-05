@@ -4,15 +4,12 @@ import '../../models/attendance_models.dart';
 import '../../services/attendance_service.dart';
 import '../../services/geofence_service.dart';
 
-// ── Active Session (Faculty) ────────────────────────────────
-
 class AttendanceSessionNotifier
     extends StateNotifier<AsyncValue<AttendanceSession?>> {
   AttendanceSessionNotifier() : super(const AsyncValue.data(null));
 
   Timer? _qrTimer;
 
-  /// Start a session and begin rotating the QR hash every 5 seconds.
   Future<void> start({
     required String timetableEntryId,
     required String facultyId,
@@ -34,18 +31,15 @@ class AttendanceSessionNotifier
     }
   }
 
-  /// Push updated QR hash to Supabase every 5 seconds.
   void _startRotation(String sessionId) {
     _qrTimer?.cancel();
     _qrTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
       await AttendanceService.rotateQrHash(sessionId);
-      // Rebuild the QR widget by notifying listeners
       final current = state.valueOrNull;
       if (current != null) state = AsyncValue.data(current);
     });
   }
 
-  /// End the session and stop QR rotation.
   Future<void> end() async {
     _qrTimer?.cancel();
     final session = state.valueOrNull;
@@ -54,7 +48,6 @@ class AttendanceSessionNotifier
     state = const AsyncValue.data(null);
   }
 
-  /// Restore a session from a previous app state (e.g. after hot reload).
   void restore(AttendanceSession session) {
     state = AsyncValue.data(session);
     _startRotation(session.id);
@@ -72,41 +65,29 @@ final activeSessionProvider =
   (ref) => AttendanceSessionNotifier(),
 );
 
-// ── Session Attendees Stream (Faculty QR screen) ────────────
-
 final sessionAttendeesProvider =
     StreamProvider.family<List<AttendanceRecord>, String>(
   (ref, sessionId) => AttendanceService.streamSessionAttendees(sessionId),
 );
-
-// ── Faculty Today Sessions ──────────────────────────────────
 
 final facultyTodaySessionsProvider =
     FutureProvider.family<List<AttendanceSession>, String>(
   (ref, facultyId) => AttendanceService.getFacultyTodaySessions(facultyId),
 );
 
-// ── Active Sessions (Admin) ─────────────────────────────────
-
 final activeSessionsProvider =
     FutureProvider<List<AttendanceSession>>(
   (_) => AttendanceService.getActiveSessions(),
 );
-
-// ── Student Attendance Summary ──────────────────────────────
 
 final studentAttendanceProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>(
   (ref, studentId) => AttendanceService.getStudentAttendanceSummary(studentId),
 );
 
-// ── Geofence Config ─────────────────────────────────────────
-
 final geofenceConfigProvider = FutureProvider<GeofenceConfig?>(
   (_) => GeofenceService.fetchActiveConfig(),
 );
-
-// ── Geofence Check (one-shot on scanner open) ───────────────
 
 class GeofenceCheckNotifier extends StateNotifier<AsyncValue<GeofenceResult?>> {
   GeofenceCheckNotifier() : super(const AsyncValue.data(null));

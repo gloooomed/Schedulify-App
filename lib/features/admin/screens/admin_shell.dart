@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../config/config_store.dart';
-import '../../../services/supabase_client.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../widgets/overview_tab.dart';
 import '../widgets/departments_tab.dart';
@@ -67,7 +66,6 @@ class _AdminShellState extends ConsumerState<AdminShell> {
         child: Row(
           children: [
             if (showSidebar) _buildSidebar(user, config),
-            // Main content — centred with max-width on very wide screens
             Expanded(
               child: Column(
                 children: [
@@ -148,7 +146,6 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     return SafeArea(
       child: Column(
         children: [
-          // Logo
           Padding(
             padding: const EdgeInsets.all(20),
             child: Row(children: [
@@ -173,9 +170,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
           ),
           const Divider(height: 1),
           const SizedBox(height: 8),
-          // Nav items
           ..._navItems.map((item) {
-            // Super admin only: hide admins tab if not super_admin (show upload for all admin)
             final isActive = _section == item.$1;
             return _NavItem(
               icon: item.$2,

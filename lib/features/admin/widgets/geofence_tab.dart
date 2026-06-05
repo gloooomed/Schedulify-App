@@ -112,7 +112,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isClosed = _points.length >= 3;
 
     return ListView(
@@ -124,7 +123,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
         ),
         const SizedBox(height: 16),
 
-        // ── Instructions ────────────────────────────────────
         GlassCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +145,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
         ),
         const SizedBox(height: 16),
 
-        // ── Name field ──────────────────────────────────────
         AppTextField(
           controller: _nameController,
           label: 'Geofence Name',
@@ -155,7 +152,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
         ),
         const SizedBox(height: 16),
 
-        // ── Map ─────────────────────────────────────────────
         ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: SizedBox(
@@ -175,7 +171,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                           'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                       userAgentPackageName: 'com.schedulify.app',
                     ),
-                    // Polygon fill
                     if (isClosed)
                       PolygonLayer(polygons: [
                         Polygon(
@@ -185,7 +180,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                           borderStrokeWidth: 2,
                         ),
                       ]),
-                    // Vertex markers
                     MarkerLayer(
                       markers: _points.asMap().entries.map((e) {
                         return Marker(
@@ -214,7 +208,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                     ),
                   ],
                 ),
-                // Location button
                 Positioned(
                   right: 12, bottom: 12,
                   child: FloatingActionButton.small(
@@ -225,7 +218,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                         : const Icon(Icons.my_location_rounded),
                   ),
                 ),
-                // Tap hint
                 if (_points.isEmpty)
                   Center(
                     child: IgnorePointer(
@@ -254,7 +246,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
         ),
         const SizedBox(height: 16),
 
-        // ── Points list ─────────────────────────────────────
         if (_points.isNotEmpty) ...[
           GlassCard(
             child: Column(
@@ -315,7 +306,6 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
           const SizedBox(height: 16),
         ],
 
-        // ── Save button ─────────────────────────────────────
         PrimaryButton(
           label: _existingConfig != null ? 'Update Geofence' : 'Save Geofence',
           icon: Icons.save_rounded,

@@ -2,7 +2,6 @@ import '../models/models.dart';
 import 'supabase_client.dart';
 
 class DbService {
-  // ── Courses ────────────────────────────────────────────────────────────────
   static Future<List<Course>> getCourses() async {
     final res = await supabase
         .from('courses')
@@ -23,7 +22,6 @@ class DbService {
     await supabase.from('courses').delete().eq('id', id);
   }
 
-  // ── Departments ────────────────────────────────────────────────────────────
   static Future<List<Department>> getDepartments() async {
     final res = await supabase
         .from('departments')
@@ -44,7 +42,6 @@ class DbService {
     await supabase.from('departments').delete().eq('id', id);
   }
 
-  // ── Classrooms ─────────────────────────────────────────────────────────────
   static Future<List<Classroom>> getClassrooms() async {
     final res = await supabase.from('classrooms').select().order('name');
     return (res as List).map((j) => Classroom.fromJson(j)).toList();
@@ -62,7 +59,6 @@ class DbService {
     await supabase.from('classrooms').delete().eq('id', id);
   }
 
-  // ── Users (Faculty / Students) ─────────────────────────────────────────────
   static Future<List<Profile>> getFacultyList() async {
     final res = await supabase
         .from('profiles')
@@ -90,7 +86,6 @@ class DbService {
     await supabase.from('profiles').update({'is_active': isActive}).eq('id', id);
   }
 
-  // ── Timetables ─────────────────────────────────────────────────────────────
   static Future<List<Timetable>> getTimetables() async {
     final res = await supabase
         .from('timetables')
@@ -108,12 +103,10 @@ class DbService {
   }
 
   static Future<void> publishTimetable(String id) async {
-    // Archive all OTHER timetables first (neq = not equal, prevents filterless update)
     await supabase
         .from('timetables')
         .update({'is_active': false, 'status': 'archived'})
         .neq('id', id);
-    // Now publish the target
     await supabase.from('timetables').update({
       'status': 'published',
       'is_active': true,
@@ -131,7 +124,6 @@ class DbService {
     await supabase.from('timetables').delete().eq('id', id);
   }
 
-  // ── Timetable Entries ──────────────────────────────────────────────────────
   static Future<List<TimetableEntry>> getActiveTimetableEntries() async {
     final res = await supabase
         .from('timetable_entries')
@@ -208,7 +200,6 @@ class DbService {
     await supabase.from('timetable_entries').delete().eq('id', id);
   }
 
-  // ── Student Courses ────────────────────────────────────────────────────────
   static Future<List<Course>> getStudentCourses(String studentId) async {
     final res = await supabase
         .from('student_enrollments')
@@ -220,7 +211,6 @@ class DbService {
         .toList();
   }
 
-  // ── Stats ──────────────────────────────────────────────────────────────────
   static Future<Map<String, int>> getDashboardStats() async {
     final futures = await Future.wait([
       supabase.from('departments').select('id'),

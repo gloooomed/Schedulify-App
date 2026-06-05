@@ -44,8 +44,6 @@ class _ProjectionView extends ConsumerStatefulWidget {
 }
 
 class _ProjectionViewState extends ConsumerState<_ProjectionView> {
-  // The QR payload rebuilds automatically every 5s because the provider
-  // notifier touches state on each rotation tick.
   bool _fullscreen = false;
 
   void _toggleFullscreen() {
@@ -95,14 +93,12 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch the session so widget rebuilds on each QR rotation tick
     ref.watch(activeSessionProvider);
 
     final attendeesAsync =
         ref.watch(sessionAttendeesProvider(widget.sessionId));
     final attendeeCount = attendeesAsync.valueOrNull?.length ?? 0;
 
-    // Always generate the current hash fresh — syncs with the rotation timer
     final payload = QrHashService.buildPayload(widget.sessionId);
 
     return Scaffold(
@@ -131,7 +127,6 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
       body: SafeArea(
         child: Column(
           children: [
-            // ── QR Code ─────────────────────────────────────
             Expanded(
               child: Center(
                 child: Column(
@@ -142,7 +137,6 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
                           style: TextStyle(color: Colors.white54, fontSize: 14)),
                     if (!_fullscreen) const SizedBox(height: 20),
 
-                    // White QR container
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
@@ -166,12 +160,10 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
 
                     const SizedBox(height: 20),
 
-                    // Rotating indicator
                     _RotationIndicator(sessionId: widget.sessionId),
 
                     const SizedBox(height: 16),
 
-                    // Live count
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 20, vertical: 10),
@@ -193,7 +185,6 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
               ),
             ),
 
-            // ── Bottom controls ──────────────────────────────
             if (_fullscreen)
               Padding(
                 padding: const EdgeInsets.all(24),
@@ -222,7 +213,6 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
   }
 }
 
-// Animated rotation countdown (ticks every second)
 class _RotationIndicator extends StatefulWidget {
   final String sessionId;
   const _RotationIndicator({required this.sessionId});

@@ -1,4 +1,3 @@
-// Attendance system domain models
 
 class GeofenceConfig {
   final String id;
@@ -47,8 +46,6 @@ class GeofencePoint {
   Map<String, dynamic> toJson() => {'lat': lat, 'lng': lng};
 }
 
-// ── Attendance Session ──────────────────────────────────────
-
 class AttendanceSession {
   final String id;
   final String timetableEntryId;
@@ -62,7 +59,6 @@ class AttendanceSession {
   final String? currentQrHash;
   final DateTime? qrUpdatedAt;
 
-  // Joined fields
   final String? courseName;
   final String? courseCode;
 
@@ -112,8 +108,6 @@ class AttendanceSession {
   }
 }
 
-// ── Attendance Record ───────────────────────────────────────
-
 class AttendanceRecord {
   final String id;
   final String sessionId;
@@ -124,7 +118,6 @@ class AttendanceRecord {
   final String? qrHashUsed;
   final bool isOverride;
 
-  // Joined fields
   final String? studentName;
   final String? rollNumber;
 
@@ -164,8 +157,6 @@ class AttendanceRecord {
   }
 }
 
-// ── Audit Log ───────────────────────────────────────────────
-
 class AuditLog {
   final String id;
   final String? recordId;
@@ -175,7 +166,6 @@ class AuditLog {
   final String reason;
   final DateTime createdAt;
 
-  // Joined
   final String? adminName;
 
   const AuditLog({
@@ -206,8 +196,6 @@ class AuditLog {
     );
   }
 }
-
-// ── Geofence Check Result ───────────────────────────────────
 
 class GeofenceResult {
   final bool isInside;

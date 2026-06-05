@@ -25,10 +25,6 @@ class _UsersTabState extends ConsumerState<UsersTab> {
     _load();
   }
 
-  // ── KEY FIX ────────────────────────────────────────────────────────────────
-  // When the admin switches Faculty ↔ Students, Flutter reuses this same
-  // element (same widget type, same position). initState is NOT called again.
-  // didUpdateWidget fires instead — we must reload if role changed.
   @override
   void didUpdateWidget(covariant UsersTab oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -100,7 +96,6 @@ class _UsersTabState extends ConsumerState<UsersTab> {
                 prefixIcon: Icons.person_outline),
             const SizedBox(height: 14),
 
-            // ── Department Dropdown ────────────────────────────────────
             Container(
               decoration: BoxDecoration(
                 color: AppColors.bgSurface,
@@ -121,7 +116,6 @@ class _UsersTabState extends ConsumerState<UsersTab> {
                         style: TextStyle(color: AppColors.textMuted)),
                   ]),
                   items: [
-                    // "None" option
                     const DropdownMenuItem<Department>(
                       value: null,
                       child: Text('— No Department —',
@@ -249,7 +243,6 @@ class _UsersTabState extends ConsumerState<UsersTab> {
                       Text(u.fullName, style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary)),
-                      // Show dept name from loaded departments list
                       Text(
                         _departments
                             .where((d) => d.id == u.departmentId)

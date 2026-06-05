@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../core/theme/app_theme.dart';
 
-// ── Glass Card ─────────────────────────────────────────────────────────────
-
 class GlassCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -46,8 +44,6 @@ class GlassCard extends StatelessWidget {
     );
   }
 }
-
-// ── Stat Card ──────────────────────────────────────────────────────────────
 
 class StatCard extends StatelessWidget {
   final String label;
@@ -96,8 +92,6 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// ── Primary Button ─────────────────────────────────────────────────────────
-
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -137,8 +131,6 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-// ── Role Badge ─────────────────────────────────────────────────────────────
-
 class RoleBadge extends StatelessWidget {
   final String role;
   const RoleBadge({super.key, required this.role});
@@ -165,8 +157,6 @@ class RoleBadge extends StatelessWidget {
   }
 }
 
-// ── Loading Shimmer ────────────────────────────────────────────────────────
-
 class ShimmerBox extends StatelessWidget {
   final double height;
   final double? width;
@@ -192,8 +182,6 @@ class ShimmerBox extends StatelessWidget {
         .shimmer(duration: 1200.ms, color: AppColors.glassBright);
   }
 }
-
-// ── Page Header ────────────────────────────────────────────────────────────
 
 class PageHeader extends StatelessWidget {
   final String title;
@@ -229,8 +217,6 @@ class PageHeader extends StatelessWidget {
     );
   }
 }
-
-// ── Empty State ────────────────────────────────────────────────────────────
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -272,8 +258,6 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-// ── Gradient Background ────────────────────────────────────────────────────
-
 class GradientBackground extends StatelessWidget {
   final Widget child;
   const GradientBackground({super.key, required this.child});
@@ -286,8 +270,6 @@ class GradientBackground extends StatelessWidget {
     );
   }
 }
-
-// ── App Text Field ─────────────────────────────────────────────────────────
 
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -334,4 +316,3 @@ class AppTextField extends StatelessWidget {
   }
 }
 
-// Import path corrected: ../../core/theme/app_theme.dart

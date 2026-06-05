@@ -59,7 +59,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      // Back to gateway
                       Align(
                         alignment: Alignment.centerLeft,
                         child: TextButton.icon(
@@ -72,7 +71,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Header
                       Container(
                         width: 64, height: 64,
                         decoration: BoxDecoration(

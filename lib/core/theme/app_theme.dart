@@ -2,34 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppColors {
-  // Backgrounds
   static const bg = Color(0xFF0A0F1E);
   static const bgCard = Color(0xFF111827);
   static const bgSurface = Color(0xFF1A2235);
 
-  // Brand
   static const primary = Color(0xFF3B82F6);
   static const primaryLight = Color(0xFF60A5FA);
   static const primaryDark = Color(0xFF1D4ED8);
 
-  // Semantic
   static const success = Color(0xFF10B981);
   static const warning = Color(0xFFF59E0B);
   static const danger = Color(0xFFEF4444);
   static const info = Color(0xFF8B5CF6);
 
-  // Text
   static const textPrimary = Color(0xFFFFFFFF);
   static const textSecondary = Color(0xFF94A3B8);
   static const textMuted = Color(0xFF475569);
 
-  // Borders / glass
   static const border = Color(0x1AFFFFFF);
   static const borderMuted = Color(0x0DFFFFFF);
   static const glass = Color(0x0DFFFFFF);
   static const glassBright = Color(0x1AFFFFFF);
 
-  // Role colors
   static const superAdmin = Color(0xFFEC4899);
   static const admin = Color(0xFF3B82F6);
   static const faculty = Color(0xFF8B5CF6);
@@ -158,4 +152,3 @@ class AppTheme {
   }
 }
 
-// Updated: CardThemeData API (Flutter 3.44+)

@@ -1,4 +1,3 @@
-// Missing helper for student courses
 import '../models/models.dart';
 import 'supabase_client.dart';
 

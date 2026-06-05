@@ -59,8 +59,6 @@ class _AttendanceAdminTabState extends ConsumerState<AttendanceAdminTab>
   }
 }
 
-// ── Live Sessions ───────────────────────────────────────────
-
 class _LiveSessionsView extends ConsumerWidget {
   const _LiveSessionsView();
 
@@ -122,7 +120,6 @@ class _SessionCard extends ConsumerWidget {
                 ),
               ]),
             ),
-            // Live count badge
             attendeesAsync.when(
               data: (records) => _CountBadge(records.length),
               loading: () => _CountBadge(0),
@@ -248,8 +245,6 @@ class _ActionButton extends StatelessWidget {
     ),
   );
 }
-
-// ── Records Sheet ───────────────────────────────────────────
 
 class _RecordsSheet extends StatefulWidget {
   final AttendanceSession session;
@@ -400,8 +395,6 @@ class _RecordsSheetState extends State<_RecordsSheet> {
   }
 }
 
-// ── Session History ─────────────────────────────────────────
-
 class _SessionHistoryView extends StatefulWidget {
   const _SessionHistoryView();
 
@@ -476,8 +469,6 @@ class _SessionHistoryViewState extends State<_SessionHistoryView> {
   }
 }
 
-// ── Helpers ─────────────────────────────────────────────────
-
 class _StatusChip extends StatelessWidget {
   final String status;
   const _StatusChip(this.status);
@@ -512,5 +503,3 @@ IconData _statusIcon(String status) => switch (status) {
       _         => Icons.help_rounded,
     };
 
-// ignore: unused_element
-const _success = AppColors.success;

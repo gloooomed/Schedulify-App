@@ -116,7 +116,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Student info card
         if (user != null)
           GlassCard(
             child: Row(children: [
@@ -150,7 +149,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           ),
         const SizedBox(height: 20),
 
-        // Quick stats
         Row(children: [
           Expanded(child: StatCard(label: 'Total Classes', value: '${_schedule.length}',
               icon: Icons.class_rounded, color: AppColors.primary)),
@@ -160,7 +158,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
         ]),
         const SizedBox(height: 20),
 
-        // Today
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
@@ -184,7 +181,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
         ),
         const SizedBox(height: 20),
 
-        // Full week
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Full Week', style: TextStyle(fontWeight: FontWeight.w700,

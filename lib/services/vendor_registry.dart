@@ -1,7 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 
-// Central vendor Supabase credentials (set in .env / build config)
 const _vendorUrl = String.fromEnvironment('VENDOR_SUPABASE_URL', defaultValue: '');
 const _vendorAnonKey = String.fromEnvironment('VENDOR_SUPABASE_ANON_KEY', defaultValue: '');
 const _vendorAccessCode = String.fromEnvironment('VENDOR_ACCESS_CODE', defaultValue: 'SCHEDULIFY2025');
@@ -13,8 +12,6 @@ class VendorRegistry {
 
   SupabaseClient? _client;
 
-  // Lazy init — client is created only when first used, not at app startup.
-  // This prevents DNS failures from blocking the app on physical devices.
   void init() { /* no-op: client is created lazily */ }
 
   SupabaseClient get _registry {

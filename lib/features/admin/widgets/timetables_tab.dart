@@ -100,6 +100,7 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
                 else await DbService.updateTimetable(tt.id, data);
                 if (mounted) { Navigator.pop(ctx); _load(); }
               } catch (e) {
+                if (!mounted) return;
                 ScaffoldMessenger.of(context)
                     .showSnackBar(SnackBar(content: Text(e.toString())));
               }
@@ -158,7 +159,6 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
             PageHeader(title: 'Timetables',
                 subtitle: '${_items.length} timetable${_items.length == 1 ? '' : 's'}'),
             const SizedBox(height: 8),
-            // Info banner
             Container(
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(14),
@@ -227,8 +227,6 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
   }
 }
 
-// ── Timetable Card ─────────────────────────────────────────────
-
 class _TimetableCard extends StatelessWidget {
   final Timetable tt;
   final Color statusColor;
@@ -281,7 +279,6 @@ class _TimetableCard extends StatelessWidget {
         ),
       ]),
       const SizedBox(height: 14),
-      // Open entries CTA
       Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(

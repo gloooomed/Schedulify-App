@@ -76,6 +76,7 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
                   else await DbService.updateClassroom(room.id, data);
                   if (mounted) { Navigator.pop(context); _load(); }
                 } catch (e) {
+                  if (!mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
                 }
               }),
@@ -97,7 +98,6 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
           padding: const EdgeInsets.all(20),
           itemCount: _loading ? 6 : (_items.isEmpty ? 1 : _items.length + 1),
           itemBuilder: (_, i) {
-            // Header row
             if (i == 0) {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
