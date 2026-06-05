@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/images/schedulify_logo_1779400589167.png" alt="Schedulify Logo" width="96" height="96" style="border-radius: 12px;" />
-</p>
-
 <h1 align="center">Schedulify</h1>
 
 <p align="center">
