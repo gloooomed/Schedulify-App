@@ -300,17 +300,58 @@ class _ErrorView extends StatelessWidget {
   );
 }
 
-class _ScannerView extends StatelessWidget {
+class _ScannerView extends StatefulWidget {
   final void Function(BarcodeCapture) onDetect;
   final bool submitting;
   const _ScannerView({required this.onDetect, required this.submitting});
 
   @override
+  State<_ScannerView> createState() => _ScannerViewState();
+}
+
+class _ScannerViewState extends State<_ScannerView> {
+  late final MobileScannerController _controller;
+  bool _cameraError = false;
+  String? _cameraErrorCode;
+
+  @override
+  void initState() {
+    super.initState();
+    // Create controller with explicit settings to avoid Camera2 race condition.
+    _controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      facing: CameraFacing.back,
+      torchEnabled: false,
+    );
+
+    // Defer camera start until after the first frame is fully rendered.
+    // This is the key fix: on Android, starting the camera before the
+    // SurfaceTexture is attached to the window causes a genericError.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _controller.start().catchError((e) {
+          if (mounted) {
+            setState(() {
+              _cameraError = true;
+              _cameraErrorCode = e.toString();
+            });
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => Stack(
     children: [
-      MobileScanner(
-        onDetect: onDetect,
-        errorBuilder: (ctx, error, child) => Center(
+      if (_cameraError)
+        Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
             child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -322,16 +363,40 @@ class _ScannerView extends StatelessWidget {
                       fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
               Text(
-                'Code: ${error.errorCode.name}\n\n'
-                'Try closing other camera apps and tap the back button and try again.',
+                'Could not start camera.\n\n'
+                'Go to Settings → Apps → Schedulify → Permissions and enable Camera.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                    color: AppColors.textSecondary, fontSize: 13),
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
               ),
+              if (_cameraErrorCode != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Error: $_cameraErrorCode',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                ),
+              ],
             ]),
           ),
+        )
+      else
+        MobileScanner(
+          controller: _controller,
+          onDetect: widget.onDetect,
+          errorBuilder: (ctx, error, child) {
+            // Surface the error in state so it survives rebuilds.
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && !_cameraError) {
+                setState(() {
+                  _cameraError = true;
+                  _cameraErrorCode = error.errorCode.name;
+                });
+              }
+            });
+            // Return a transparent box while the state update is pending.
+            return const SizedBox.expand();
+          },
         ),
-      ),
       Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           Container(
@@ -349,7 +414,7 @@ class _ScannerView extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              submitting ? 'Verifying…' : 'Point camera at the QR on the screen',
+              widget.submitting ? 'Verifying…' : 'Point camera at the QR on the screen',
               style: const TextStyle(color: Colors.white, fontSize: 14),
             ),
           ),
@@ -370,7 +435,7 @@ class _ScannerView extends StatelessWidget {
           ),
         ]),
       ),
-      if (submitting)
+      if (widget.submitting)
         Container(color: Colors.black54,
             child: const Center(child: CircularProgressIndicator())),
     ],
