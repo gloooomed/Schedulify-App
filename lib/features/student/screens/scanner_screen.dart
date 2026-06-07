@@ -8,7 +8,7 @@ import '../../../services/attendance_service.dart';
 import '../../../services/geofence_service.dart';
 import '../../../services/qr_hash_service.dart';
 import '../../../shared/widgets/widgets.dart';
-import '../widgets/qr_scanner_view.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
@@ -104,6 +104,34 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
   Future<void> _requestCameraAndScan() async {
     if (!mounted) return;
     setState(() => _step = _Step.scanning);
+
+    try {
+      final result = await BarcodeScanner.scan(
+        options: const ScanOptions(restrictFormat: [BarcodeFormat.qr]),
+      );
+
+      if (!mounted) return;
+
+      if (result.type == ResultType.Cancelled) {
+        Navigator.of(context).pop();
+        return;
+      }
+
+      if (result.type == ResultType.Barcode) {
+        await _submitAttendance(result.rawContent);
+      } else {
+        setState(() {
+          _step = _Step.error;
+          _errorMessage = 'Could not read barcode. Try again.';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _step = _Step.error;
+        _errorMessage = 'Scanner error: $e';
+      });
+    }
   }
 
   Future<void> _submitAttendance(String raw) async {
@@ -163,8 +191,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     appBar: AppBar(title: const Text('Mark Attendance')),
     body: switch (_step) {
       _Step.checking => _CheckingView(),
-      _Step.scanning => QrScannerView(
-          onCodeDetected: _submitAttendance),
+      _Step.scanning => const Center(child: CircularProgressIndicator()),
       _Step.error    => _ErrorView(
           message: _errorMessage ?? 'Unknown error',
           onRetry: _doGeofenceCheck),
@@ -192,8 +219,7 @@ class _CheckingView extends StatelessWidget {
   );
 }
 
-// _ScanningView is replaced by QrScannerView in qr_scanner_view.dart.
-// It is intentionally not defined here.
+// QrScannerView is removed, barcode_scan2 handles its own UI
 
 class _ErrorView extends StatelessWidget {
   final String message;
