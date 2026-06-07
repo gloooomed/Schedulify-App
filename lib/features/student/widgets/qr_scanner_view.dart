@@ -29,24 +29,14 @@ class QrScannerView extends StatefulWidget {
 }
 
 class _QrScannerViewState extends State<QrScannerView> {
-  late final MobileScannerController _controller;
   String? _cameraError;
   bool _locked = false;
   Timer? _cooldownTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
-      formats: [BarcodeFormat.qrCode],
-    );
-  }
+  int _retryKey = 0;
 
   @override
   void dispose() {
     _cooldownTimer?.cancel();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -82,10 +72,10 @@ class _QrScannerViewState extends State<QrScannerView> {
     if (_cameraError != null) {
       return _CameraErrorView(
         message: _cameraError!,
-        onRetry: () async {
-          setState(() => _cameraError = null);
-          await _controller.start();
-        },
+        onRetry: () => setState(() {
+          _cameraError = null;
+          _retryKey++;
+        }),
       );
     }
 
@@ -94,7 +84,7 @@ class _QrScannerViewState extends State<QrScannerView> {
       children: [
         // ── Live camera feed ──────────────────────────────────────────────
         MobileScanner(
-          controller: _controller,
+          key: ValueKey(_retryKey),
           fit: BoxFit.cover,
           onDetect: _onDetect,
           errorBuilder: (context, error, child) {
