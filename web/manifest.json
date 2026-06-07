@@ -1,13 +1,12 @@
 {
-    "name": "Schedulify",
-    "short_name": "Schedulify",
-    "description": "Multi-tenant college scheduling platform",
-    "start_url": "/",
-    "scope": "/",
+    "name": "schedulify",
+    "short_name": "schedulify",
+    "start_url": ".",
     "display": "standalone",
+    "background_color": "#0175C2",
+    "theme_color": "#0175C2",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
-    "background_color": "#0D0D14",
-    "theme_color": "#0D0D14",
     "prefer_related_applications": false,
     "icons": [
         {
