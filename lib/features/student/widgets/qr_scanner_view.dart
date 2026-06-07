@@ -28,43 +28,15 @@ class QrScannerView extends StatefulWidget {
   State<QrScannerView> createState() => _QrScannerViewState();
 }
 
-class _QrScannerViewState extends State<QrScannerView>
-    with WidgetsBindingObserver {
-  late final MobileScannerController _controller;
+class _QrScannerViewState extends State<QrScannerView> {
   String? _cameraError;
   bool _locked = false;
   Timer? _cooldownTimer;
   int _retryKey = 0;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _controller = MobileScannerController(
-      detectionSpeed: DetectionSpeed.normal,
-      formats: [BarcodeFormat.qrCode],
-    );
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.detached:
-        _controller.stop();
-      case AppLifecycleState.resumed:
-        if (_cameraError == null) _controller.start();
-      case AppLifecycleState.hidden:
-        break;
-    }
-  }
-
-  @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _cooldownTimer?.cancel();
-    _controller.dispose();
     super.dispose();
   }
 
@@ -100,14 +72,10 @@ class _QrScannerViewState extends State<QrScannerView>
     if (_cameraError != null) {
       return _CameraErrorView(
         message: _cameraError!,
-        onRetry: () async {
-          await _controller.stop();
-          setState(() {
-            _cameraError = null;
-            _retryKey++;
-          });
-          await _controller.start();
-        },
+        onRetry: () => setState(() {
+          _cameraError = null;
+          _retryKey++;
+        }),
       );
     }
 
@@ -116,12 +84,11 @@ class _QrScannerViewState extends State<QrScannerView>
       children: [
         MobileScanner(
           key: ValueKey(_retryKey),
-          controller: _controller,
           fit: BoxFit.cover,
           onDetect: _onDetect,
-          errorBuilder: (context, error, child) {
+          errorBuilder: (context, error) {
             WidgetsBinding.instance.addPostFrameCallback((_) => _onError(error));
-            return child ?? const SizedBox.shrink();
+            return const SizedBox.shrink();
           },
         ),
 
