@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../../../core/utils/pwa_prompt.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +21,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _showPassword = false;
   bool _isLoading = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      PwaPrompt.showIfNeeded(context);
+    });
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
