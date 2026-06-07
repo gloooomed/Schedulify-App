@@ -28,15 +28,43 @@ class QrScannerView extends StatefulWidget {
   State<QrScannerView> createState() => _QrScannerViewState();
 }
 
-class _QrScannerViewState extends State<QrScannerView> {
+class _QrScannerViewState extends State<QrScannerView>
+    with WidgetsBindingObserver {
+  late final MobileScannerController _controller;
   String? _cameraError;
   bool _locked = false;
   Timer? _cooldownTimer;
   int _retryKey = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _controller = MobileScannerController(
+      detectionSpeed: DetectionSpeed.normal,
+      formats: [BarcodeFormat.qrCode],
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        _controller.stop();
+      case AppLifecycleState.resumed:
+        if (_cameraError == null) _controller.start();
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cooldownTimer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -45,7 +73,6 @@ class _QrScannerViewState extends State<QrScannerView> {
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null || raw.isEmpty) return;
 
-    // Lock immediately so no duplicate fires during the cooldown window.
     _locked = true;
     _cooldownTimer?.cancel();
     _cooldownTimer = Timer(widget.cooldown, () {
@@ -56,6 +83,7 @@ class _QrScannerViewState extends State<QrScannerView> {
   }
 
   void _onError(MobileScannerException error) {
+    if (!mounted) return;
     setState(() {
       _cameraError = switch (error.errorCode) {
         MobileScannerErrorCode.permissionDenied =>
@@ -72,19 +100,23 @@ class _QrScannerViewState extends State<QrScannerView> {
     if (_cameraError != null) {
       return _CameraErrorView(
         message: _cameraError!,
-        onRetry: () => setState(() {
-          _cameraError = null;
-          _retryKey++;
-        }),
+        onRetry: () async {
+          await _controller.stop();
+          setState(() {
+            _cameraError = null;
+            _retryKey++;
+          });
+          await _controller.start();
+        },
       );
     }
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // ── Live camera feed ──────────────────────────────────────────────
         MobileScanner(
           key: ValueKey(_retryKey),
+          controller: _controller,
           fit: BoxFit.cover,
           onDetect: _onDetect,
           errorBuilder: (context, error, child) {
@@ -93,13 +125,10 @@ class _QrScannerViewState extends State<QrScannerView> {
           },
         ),
 
-        // ── Semi-transparent dimming outside the finder box ───────────────
         CustomPaint(painter: _ViewfinderPainter()),
 
-        // ── Corner bracket overlay ────────────────────────────────────────
         const Center(child: _ViewfinderBrackets()),
 
-        // ── Bottom hint bar ───────────────────────────────────────────────
         Align(
           alignment: Alignment.bottomCenter,
           child: Container(
@@ -118,15 +147,12 @@ class _QrScannerViewState extends State<QrScannerView> {
           ),
         ),
 
-        // ── Locked indicator (subtle pulse after a detection) ─────────────
         if (_locked)
           const Positioned(
             top: 24,
             left: 0,
             right: 0,
-            child: Center(
-              child: _ScannedChip(),
-            ),
+            child: Center(child: _ScannedChip()),
           ),
       ],
     );
