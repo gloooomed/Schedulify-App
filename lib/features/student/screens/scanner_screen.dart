@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:barcode_scan2/barcode_scan2.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../core/providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/attendance_models.dart';
@@ -10,6 +8,7 @@ import '../../../services/attendance_service.dart';
 import '../../../services/geofence_service.dart';
 import '../../../services/qr_hash_service.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../widgets/qr_scanner_view.dart';
 
 class ScannerScreen extends ConsumerStatefulWidget {
   const ScannerScreen({super.key});
@@ -104,56 +103,7 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
   Future<void> _requestCameraAndScan() async {
     if (!mounted) return;
-
-    var status = await Permission.camera.status;
-    if (!status.isGranted) {
-      status = await Permission.camera.request();
-    }
-
-    if (!mounted) return;
-
-    if (status.isPermanentlyDenied) {
-      setState(() {
-        _step = _Step.error;
-        _errorMessage =
-            'Camera permission permanently denied.\n\n'
-            'Go to Settings → Apps → Schedulify → Permissions → Camera → Allow,\n'
-            'then tap Try Again.';
-      });
-      return;
-    }
-
-    if (!status.isGranted) {
-      setState(() {
-        _step = _Step.error;
-        _errorMessage =
-            'Camera permission is required to scan the QR code.\nTap Try Again to allow it.';
-      });
-      return;
-    }
-
     setState(() => _step = _Step.scanning);
-
-    try {
-      final result = await BarcodeScanner.scan(
-        options: const ScanOptions(restrictFormat: [BarcodeFormat.qr]),
-      );
-
-      if (!mounted) return;
-
-      if (result.type == ResultType.Cancelled) {
-        Navigator.of(context).pop();
-        return;
-      }
-
-      await _submitAttendance(result.rawContent);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _step = _Step.error;
-        _errorMessage = 'Scanner error: $e\n\nTap Try Again.';
-      });
-    }
   }
 
   Future<void> _submitAttendance(String raw) async {
@@ -213,11 +163,11 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
     appBar: AppBar(title: const Text('Mark Attendance')),
     body: switch (_step) {
       _Step.checking => _CheckingView(),
-      _Step.scanning => _ScanningView(),
+      _Step.scanning => QrScannerView(
+          onCodeDetected: _submitAttendance),
       _Step.error    => _ErrorView(
           message: _errorMessage ?? 'Unknown error',
-          onRetry: _doGeofenceCheck,
-          showSettings: _errorMessage?.contains('permanently') ?? false),
+          onRetry: _doGeofenceCheck),
       _Step.result   => _ResultView(
           success: _success,
           submitting: _submitting,
@@ -242,27 +192,13 @@ class _CheckingView extends StatelessWidget {
   );
 }
 
-class _ScanningView extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) => const Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      CircularProgressIndicator(),
-      SizedBox(height: 24),
-      Text('Opening camera…',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
-      SizedBox(height: 8),
-      Text('Point at the QR code on the faculty screen',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-    ]),
-  );
-}
+// _ScanningView is replaced by QrScannerView in qr_scanner_view.dart.
+// It is intentionally not defined here.
 
 class _ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
-  final bool showSettings;
-  const _ErrorView({required this.message, required this.onRetry,
-      this.showSettings = false});
+  const _ErrorView({required this.message, required this.onRetry});
 
   @override
   Widget build(BuildContext context) => Center(
@@ -293,14 +229,6 @@ class _ErrorView extends StatelessWidget {
           width: double.infinity,
           onPressed: onRetry,
         ),
-        if (showSettings) ...[
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: openAppSettings,
-            icon: const Icon(Icons.settings_rounded, size: 16),
-            label: const Text('Open App Settings'),
-          ),
-        ],
       ]),
     ),
   );

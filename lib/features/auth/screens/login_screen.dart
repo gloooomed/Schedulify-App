@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/utils/pwa_prompt.dart';
 import '../../../shared/widgets/widgets.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -42,6 +43,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _ => '/student',
       };
       context.go(route);
+      // Show iOS PWA install hint (no-op on Android native & desktop).
+      await PwaPrompt.showIfNeeded(context);
     }
   }
 

@@ -1,15 +1,28 @@
 PODS:
+  - barcode_scan2 (0.0.1):
+    - Flutter
+    - SwiftProtobuf (~> 1.33)
   - Flutter (1.0.0)
+  - SwiftProtobuf (1.38.0)
 
 DEPENDENCIES:
+  - barcode_scan2 (from `.symlinks/plugins/barcode_scan2/ios`)
   - Flutter (from `Flutter`)
 
+SPEC REPOS:
+  trunk:
+    - SwiftProtobuf
+
 EXTERNAL SOURCES:
+  barcode_scan2:
+    :path: ".symlinks/plugins/barcode_scan2/ios"
   Flutter:
     :path: Flutter
 
 SPEC CHECKSUMS:
+  barcode_scan2: 4e4b850b112f4e29017833e4715f36161f987966
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+  SwiftProtobuf: d724b5145bfc609d9a49c1e3e3a3dabb07273ffb
 
 PODFILE CHECKSUM: 5b09406f5533f670a98a35b5bf281f156d27c54b
 
