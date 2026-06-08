@@ -10,6 +10,8 @@ import '../../features/admin/screens/admin_shell.dart';
 import '../../features/faculty/screens/faculty_dashboard.dart';
 import '../../features/student/screens/student_dashboard.dart';
 
+import 'package:firebase_analytics/firebase_analytics.dart';
+
 class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(this._ref) {
     _ref.listen<AuthState>(authProvider, (_, __) => notifyListeners());
@@ -58,6 +60,9 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/',
     refreshListenable: notifier,
     redirect: notifier.redirect,
+    observers: [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ],
     routes: [
       GoRoute(path: '/', builder: (_, __) => const GatewayScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const SetupWizardScreen()),
