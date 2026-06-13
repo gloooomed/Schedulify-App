@@ -39,9 +39,9 @@ class AppColors {
   static const lightTextMuted    = Color(0xFF9CA3AF);
 
   // ── Dark palette ──────────────────────────────────────────────────────────
-  static const darkBg            = Color(0xFF0A0F1E);
-  static const darkSurface       = Color(0xFF111827);
-  static const darkSurfaceVar    = Color(0xFF1A2235);
+  static const darkBg            = Color(0xFF000000);
+  static const darkSurface       = Color(0xFF121212);
+  static const darkSurfaceVar    = Color(0xFF1E1E1E);
   static const darkBorder        = Color(0x1AFFFFFF);
   static const darkTextPrimary   = Color(0xFFFFFFFF);
   static const darkTextSecondary = Color(0xFF94A3B8);
@@ -149,6 +149,7 @@ class AppTheme {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppColors.primary.withOpacity(0.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
+          minimumSize: const Size(0, 52), // Match TextFormField height
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
           textStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 15),

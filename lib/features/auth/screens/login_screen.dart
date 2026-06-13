@@ -67,20 +67,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 key: _formKey,
                 child: Column(
                   children: [
-                    // Back link
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        onPressed: () => context.go('/'),
-                        icon: Icon(Icons.arrow_back_rounded, size: 16,
-                            color: context.textSecondary),
-                        label: Text('Change College',
-                            style: TextStyle(color: context.textSecondary,
-                                fontSize: 14)),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
                     // Icon
                     Container(
                       width: 80, height: 80,
@@ -109,7 +95,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     // Form card
                     GlassCard(
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           // Email field with explicit label above
                           Text('Email',
@@ -166,7 +152,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                           PrimaryButton(
                             label: 'Sign In',
-                            icon: Icons.login_rounded,
                             isLoading: _isLoading,
                             width: double.infinity,
                             onPressed: _login,

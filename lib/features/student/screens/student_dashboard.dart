@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../services/db_service.dart';
 import '../../../models/models.dart';
 import '../../../shared/widgets/widgets.dart';
@@ -57,6 +58,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -66,6 +69,15 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             if (user != null) Text(user.fullName, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
           ]),
           actions: [
+            IconButton(
+              icon: Icon(
+                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                size: 20,
+              ),
+              tooltip: isDark ? 'Light mode' : 'Dark mode',
+              onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+            ),
+            const SizedBox(width: 4),
             if (user != null) RoleBadge(role: user.role),
             const SizedBox(width: 8),
             IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
