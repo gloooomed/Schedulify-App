@@ -50,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         'faculty'                => '/faculty',
         _                        => '/student',
       };
-      context.go(route);
+      context.go('/splash?next=$route');
     }
   }
 
@@ -74,12 +74,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         color: AppColors.primary,
                         borderRadius: BorderRadius.circular(24),
                       ),
-                      child: const Icon(Icons.lock_rounded,
+                      child: const Icon(Icons.calendar_month_rounded,
                           color: Colors.white, size: 38),
                     ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.8, 0.8)),
                     const SizedBox(height: 24),
 
-                    Text('Welcome back',
+                    Text('Schedulify',
                         style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.w800,

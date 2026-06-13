@@ -189,22 +189,16 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (subtitle == null && action == null) return const SizedBox.shrink();
     return Row(
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: context.textPrimary)),
-              if (subtitle != null) ...[
-                const SizedBox(height: 4),
+              if (subtitle != null)
                 Text(subtitle!,
                     style: TextStyle(fontSize: 14, color: context.textSecondary)),
-              ],
             ],
           ),
         ),

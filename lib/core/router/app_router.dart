@@ -9,6 +9,7 @@ import '../../features/auth/screens/login_screen.dart';
 import '../../features/admin/screens/admin_shell.dart';
 import '../../features/faculty/screens/faculty_dashboard.dart';
 import '../../features/student/screens/student_dashboard.dart';
+import '../../shared/screens/splash_screen.dart';
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 
@@ -32,11 +33,14 @@ class _RouterNotifier extends ChangeNotifier {
 
     if (configReady && !isAuthenticated && path == '/') return '/login';
 
-    const publicPaths = ['/', '/setup', '/login'];
+    const publicPaths = ['/', '/setup', '/login', '/splash'];
     if (!isAuthenticated && !publicPaths.contains(path)) return '/login';
 
+    // Already on splash — let it through
+    if (path == '/splash') return null;
+
     if (isAuthenticated && (path == '/' || path == '/login')) {
-      return _roleHome(authState.user!.role);
+      return '/splash?next=${_roleHome(authState.user!.role)}';
     }
 
     if (isAuthenticated) {
@@ -67,6 +71,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/', builder: (_, __) => const GatewayScreen()),
       GoRoute(path: '/setup', builder: (_, __) => const SetupWizardScreen()),
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+      GoRoute(
+        path: '/splash',
+        builder: (_, state) => SplashScreen(
+          nextRoute: state.uri.queryParameters['next'] ?? '/',
+        ),
+      ),
       GoRoute(
         path: '/admin',
         builder: (_, __) => const AdminShell(),

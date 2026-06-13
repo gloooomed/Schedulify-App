@@ -20,6 +20,14 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   List<TimetableEntry> _schedule = [];
   List<Course> _courses = [];
   bool _loading = true;
+  String _section = 'schedule';
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  static const _navItems = [
+    ('schedule',   Icons.calendar_today_rounded, 'Schedule'),
+    ('courses',    Icons.book_rounded,           'Courses'),
+    ('attendance', Icons.fact_check_rounded,     'Attendance'),
+  ];
 
   @override
   void initState() {
@@ -38,8 +46,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
       ]);
       setState(() {
         _schedule = r[0] as List<TimetableEntry>;
-        _courses = r[1] as List<Course>;
-        _loading = false;
+        _courses  = r[1] as List<Course>;
+        _loading  = false;
       });
     } catch (_) { setState(() => _loading = false); }
   }
@@ -57,71 +65,148 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
+    final user   = ref.watch(currentUserProvider);
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final screenWidth  = MediaQuery.of(context).size.width;
+    final showSidebar  = screenWidth >= 720;
 
-    return DefaultTabController(
-      length: 3,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Student Portal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            if (user != null) Text(user.fullName, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
-          ]),
-          actions: [
-            IconButton(
-              icon: Icon(
-                isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-                size: 20,
-              ),
-              tooltip: isDark ? 'Light mode' : 'Dark mode',
-              onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
-            ),
-            const SizedBox(width: 4),
-            if (user != null) RoleBadge(role: user.role),
-            const SizedBox(width: 8),
-            IconButton(icon: const Icon(Icons.logout_rounded, size: 20), onPressed: _logout),
-            const SizedBox(width: 8),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Schedule', icon: Icon(Icons.calendar_today_rounded, size: 16)),
-              Tab(text: 'Courses',  icon: Icon(Icons.book_rounded, size: 16)),
-              Tab(text: 'Attendance', icon: Icon(Icons.fact_check_rounded, size: 16)),
-            ],
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textMuted,
-            indicatorColor: AppColors.primary,
-            labelStyle: TextStyle(fontSize: 12),
-          ),
-        ),
-        body: TabBarView(
+    return Scaffold(
+      key: _scaffoldKey,
+      drawer: showSidebar ? null : _buildDrawer(user),
+      backgroundColor: context.bgColor,
+      body: SafeArea(
+        child: Row(
           children: [
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
-                child: RefreshIndicator(
-                  onRefresh: _load,
-                  color: AppColors.primary,
-                  child: _scheduleView(user),
-                ),
+            if (showSidebar) _buildSidebar(user),
+            Expanded(
+              child: Column(
+                children: [
+                  _buildTopBar(user, isDark, context, showSidebar),
+                  Expanded(child: _buildContent(user)),
+                ],
               ),
             ),
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 900),
-                child: RefreshIndicator(
-                  onRefresh: _load,
-                  color: AppColors.primary,
-                  child: _coursesView(),
-                ),
-              ),
-            ),
-            const StudentAttendanceTab(),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildTopBar(user, bool isDark, BuildContext context, bool showSidebar) {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(bottom: BorderSide(color: context.borderColor)),
+      ),
+      child: Row(
+        children: [
+          if (!showSidebar)
+            IconButton(
+              icon: Icon(Icons.menu_rounded, color: context.textPrimary),
+              onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+            ),
+          Text(
+            _navItems.firstWhere((n) => n.$1 == _section).$3,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: context.textPrimary),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: Icon(isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+                color: context.textSecondary, size: 20),
+            tooltip: isDark ? 'Light mode' : 'Dark mode',
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+          ),
+          const SizedBox(width: 4),
+          if (user != null) ...[
+            RoleBadge(role: user.role),
+            const SizedBox(width: 8),
+            Text(user.fullName, style: TextStyle(color: context.textSecondary, fontSize: 13)),
+            const SizedBox(width: 4),
+          ],
+          IconButton(
+            icon: Icon(Icons.logout_rounded, color: context.textMuted, size: 20),
+            onPressed: _logout, tooltip: 'Logout',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar(user) {
+    return Container(
+      width: 220,
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(right: BorderSide(color: context.borderColor)),
+      ),
+      child: _sidebarContent(user),
+    );
+  }
+
+  Widget _buildDrawer(user) => Drawer(child: _sidebarContent(user));
+
+  Widget _sidebarContent(user) {
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+            child: Row(children: [
+              Container(
+                width: 36, height: 36,
+                decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10)),
+                child: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Schedulify', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: context.textPrimary)),
+                Text('Student', style: TextStyle(fontSize: 11, color: context.textSecondary)),
+              ]),
+            ]),
+          ),
+          Divider(height: 1, color: context.borderColor),
+          const SizedBox(height: 8),
+          ..._navItems.map((item) {
+            final isActive = _section == item.$1;
+            return _NavItem(
+              icon: item.$2, label: item.$3, isActive: isActive,
+              onTap: () {
+                setState(() => _section = item.$1);
+                if (MediaQuery.of(context).size.width < 720) Navigator.of(context).pop();
+              },
+            );
+          }),
+          const Spacer(),
+          Divider(height: 1, color: context.borderColor),
+          const SizedBox(height: 4),
+          _NavItem(icon: Icons.logout_outlined, label: 'Logout', isActive: false,
+              onTap: _logout, color: AppColors.danger),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContent(user) {
+    return switch (_section) {
+      'attendance' => const StudentAttendanceTab(),
+      'courses'    => Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: RefreshIndicator(onRefresh: _load, color: AppColors.primary,
+                child: _coursesView()),
+          ),
+        ),
+      _ => Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: RefreshIndicator(onRefresh: _load, color: AppColors.primary,
+                child: _scheduleView(user)),
+          ),
+        ),
+    };
   }
 
   Widget _scheduleView(Profile? user) {
@@ -139,8 +224,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                           ? '${user.firstName[0]}${user.lastName[0]}'
                           : user.firstName[0])
                       : '?',
-                  style: TextStyle(color: AppColors.student,
-                      fontWeight: FontWeight.w700, fontSize: 18)),
+                  style: TextStyle(color: AppColors.student, fontWeight: FontWeight.w700, fontSize: 18)),
               ),
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -149,8 +233,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                 if (user.rollNumber != null)
                   Text(user.rollNumber!, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
                 Row(children: [
-                  if (user.batch != null)
-                    _Tag(user.batch!, AppColors.info),
+                  if (user.batch != null) _Tag(user.batch!, AppColors.info),
                   if (user.semester != null) ...[
                     const SizedBox(width: 6),
                     _Tag(user.semester!, AppColors.faculty),
@@ -160,7 +243,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             ]),
           ),
         const SizedBox(height: 20),
-
         Row(children: [
           Expanded(child: StatCard(label: 'Total Classes', value: '${_schedule.length}',
               icon: Icons.class_rounded, color: AppColors.primary)),
@@ -169,7 +251,6 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               icon: Icons.book_rounded, color: AppColors.info)),
         ]),
         const SizedBox(height: 20),
-
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
@@ -183,16 +264,13 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               ...List.generate(3, (_) => Padding(padding: const EdgeInsets.only(bottom: 8),
                   child: ShimmerBox(height: 56, radius: 10)))
             else if (_todayClasses.isEmpty)
-              const Center(child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Text('No classes today 🎉', style: TextStyle(color: AppColors.textSecondary)),
-              ))
+              const Center(child: Padding(padding: EdgeInsets.all(16),
+                  child: Text('No classes today 🎉', style: TextStyle(color: AppColors.textSecondary))))
             else
               ..._todayClasses.map((e) => _StudentSlot(entry: e)),
           ]),
         ),
         const SizedBox(height: 20),
-
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Full Week', style: TextStyle(fontWeight: FontWeight.w700,
@@ -243,7 +321,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                   color: AppColors.info.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(c.code, style: TextStyle(color: AppColors.info,
+                child: Text(c.code, style: const TextStyle(color: AppColors.info,
                     fontWeight: FontWeight.w700, fontSize: 12)),
               ),
               const SizedBox(width: 14),
@@ -256,8 +334,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                   Text(c.department!.name,
                       style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
               ])),
-              if (c.isElective)
-                _Tag('Elective', AppColors.warning),
+              if (c.isElective) _Tag('Elective', AppColors.warning),
             ]),
           ),
         );
@@ -265,6 +342,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
     );
   }
 }
+
+// ─── Widgets ──────────────────────────────────────────────────────────────────
 
 String _fmtTime(String? t) {
   if (t == null || t.isEmpty) return '--:--';
@@ -321,4 +400,38 @@ class _Tag extends StatelessWidget {
     decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(5)),
     child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
   );
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const _NavItem({required this.icon, required this.label,
+      required this.isActive, required this.onTap, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? (isActive ? AppColors.primary : context.textSecondary);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(children: [
+          Icon(icon, color: c, size: 19),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: c,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400, fontSize: 14)),
+        ]),
+      ),
+    );
+  }
 }
