@@ -289,23 +289,22 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GradientBackground(
-        child: SafeArea(
+      body: SafeArea(
           child: Column(children: [
             Padding(
               padding: const EdgeInsets.all(20),
               child: Row(children: [
                 IconButton(
                   onPressed: () => _step > 0 ? setState(() => _step--) : context.go('/'),
-                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                  icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
                 ),
                 const SizedBox(width: 8),
                 Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  const Text('College Setup',
+                  Text('College Setup',
                       style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary)),
+                          color: Theme.of(context).colorScheme.onSurface)),
                   Text('Step ${_step + 1} of ${_steps.length}: ${_steps[_step]}',
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                      style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                 ])),
               ]),
             ),
@@ -315,7 +314,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: (_step + 1) / _steps.length,
-                  backgroundColor: AppColors.border,
+                  backgroundColor: Theme.of(context).dividerColor,
                   valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                   minHeight: 4,
                 ),
@@ -330,20 +329,9 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
                     constraints: const BoxConstraints(maxWidth: 480),
                     child: Column(children: [
                       if (_error != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.danger.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppColors.danger.withOpacity(0.3)),
-                          ),
-                          child: Row(children: [
-                            const Icon(Icons.error_outline, color: AppColors.danger, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(_error!,
-                                style: const TextStyle(color: AppColors.danger))),
-                          ]),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: ErrorContainer(message: _error!),
                         ),
                       _buildStep().animate().fadeIn(duration: 350.ms).slideX(begin: 0.05, end: 0),
                       const SizedBox(height: 40),
@@ -354,7 +342,6 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             ),
           ]),
         ),
-      ),
     );
   }
 
@@ -368,15 +355,15 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     _ => _buildDone(),
   };
 
-  Widget _buildAccessCode() => GlassCard(
+  Widget _buildAccessCode() => Builder(builder: (context) => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.lock_outline_rounded, color: AppColors.primary, size: 36),
       const SizedBox(height: 16),
-      const Text('Vendor Access Code',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+      Text('Vendor Access Code',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.textPrimary)),
       const SizedBox(height: 8),
-      const Text('Enter the access code provided by Schedulify to start your college setup.',
-          style: TextStyle(color: AppColors.textSecondary)),
+      Text('Enter the access code provided by Schedulify to start your college setup.',
+          style: TextStyle(color: context.textSecondary)),
       const SizedBox(height: 24),
       AppTextField(controller: _accessCode, label: 'Access Code',
           hint: 'schedulify-2024-secret', prefixIcon: Icons.key_rounded, obscureText: true),
@@ -384,17 +371,17 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       PrimaryButton(label: 'Verify Code', icon: Icons.arrow_forward_rounded,
           width: double.infinity, onPressed: _verifyCode),
     ]),
-  );
+  ));
 
-  Widget _buildCollegeInfo() => GlassCard(
+  Widget _buildCollegeInfo() => Builder(builder: (context) => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const Icon(Icons.school_rounded, color: AppColors.primary, size: 36),
       const SizedBox(height: 16),
-      const Text('College Information',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+      Text('College Information',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: context.textPrimary)),
       const SizedBox(height: 8),
-      const Text('Basic details about your institution.',
-          style: TextStyle(color: AppColors.textSecondary)),
+      Text('Basic details about your institution.',
+          style: TextStyle(color: context.textSecondary)),
       const SizedBox(height: 24),
       AppTextField(controller: _collegeName, label: 'College Name',
           hint: 'Delhi Institute of Technology', prefixIcon: Icons.business_rounded),
@@ -406,7 +393,7 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
       PrimaryButton(label: 'Continue', icon: Icons.arrow_forward_rounded,
           width: double.infinity, onPressed: _validateCollegeInfo),
     ]),
-  );
+  ));
 
   Widget _buildSupabaseConfig() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -471,16 +458,16 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
       ),
       const SizedBox(height: 20),
-      Container(
+      Builder(builder: (context) => Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.bgSurface,
+          color: context.surfaceVarColor,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.borderColor),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            const Text('Schema SQL', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Text('Schema SQL', style: TextStyle(color: context.textSecondary, fontSize: 12)),
             GestureDetector(
               onTap: () {
                 Clipboard.setData(const ClipboardData(text: _schemaSql));
@@ -493,10 +480,10 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
             ),
           ]),
           const SizedBox(height: 8),
-          const Text('profiles, departments, courses, classrooms,\ntimetables, timetable_entries, enrollments + RLS',
-              style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.5)),
+          Text('profiles, departments, courses, classrooms,\ntimetables, timetable_entries, enrollments + RLS',
+              style: TextStyle(color: context.textMuted, fontSize: 12, height: 1.5)),
         ]),
-      ),
+      )),
       const SizedBox(height: 20),
       if (!_schemaCreated)
         PrimaryButton(label: 'Create Database Tables', icon: Icons.build_rounded,
@@ -568,29 +555,29 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     ]),
   );
 
-  Widget _buildDone() => GlassCard(
+  Widget _buildDone() => Builder(builder: (context) => GlassCard(
     child: Column(children: [
       const Icon(Icons.celebration_rounded, color: AppColors.success, size: 52),
       const SizedBox(height: 16),
-      const Text('You\'re all set!',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+      Text('You\'re all set!',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: context.textPrimary)),
       const SizedBox(height: 8),
-      const Text('Your college is registered on Schedulify. Share your College ID with faculty and students.',
-          style: TextStyle(color: AppColors.textSecondary), textAlign: TextAlign.center),
+      Text('Your college is registered on Schedulify. Share your College ID with faculty and students.',
+          style: TextStyle(color: context.textSecondary), textAlign: TextAlign.center),
       const SizedBox(height: 24),
-      const Text('Your College ID', style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      Text('Your College ID', style: TextStyle(color: context.textSecondary, fontSize: 13)),
       const SizedBox(height: 8),
       GestureDetector(
         onTap: () => Clipboard.setData(ClipboardData(text: _generatedCollegeId ?? '')),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
           decoration: BoxDecoration(
-            gradient: AppGradients.primary,
+            color: AppColors.primary,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Text(_generatedCollegeId ?? '',
-                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800,
                     color: Colors.white, letterSpacing: 3)),
             const SizedBox(width: 10),
             const Icon(Icons.copy_rounded, color: Colors.white70, size: 18),
@@ -598,14 +585,14 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
         ),
       ),
       const SizedBox(height: 8),
-      const Text('Tap to copy', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+      Text('Tap to copy', style: TextStyle(color: context.textMuted, fontSize: 12)),
       const SizedBox(height: 24),
       _infoRow(Icons.person_outline_rounded, 'Login with', _adminEmail.text),
       const SizedBox(height: 24),
       PrimaryButton(label: 'Go to Login', icon: Icons.login_rounded,
           width: double.infinity, onPressed: () => context.go('/login')),
     ]),
-  );
+  ));
 
   Widget _successBanner(String msg) => Container(
     padding: const EdgeInsets.all(12),
@@ -617,16 +604,16 @@ class _SetupWizardScreenState extends State<SetupWizardScreen> {
     child: Row(children: [
       const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 18),
       const SizedBox(width: 8),
-      Text(msg, style: const TextStyle(color: AppColors.success)),
+      Text(msg, style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w500)),
     ]),
   );
 
-  Widget _infoRow(IconData icon, String label, String value) => Row(children: [
+  Widget _infoRow(IconData icon, String label, String value) => Builder(builder: (context) => Row(children: [
     Icon(icon, color: AppColors.primary, size: 18),
     const SizedBox(width: 10),
-    Text('$label: ', style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+    Text('$label: ', style: TextStyle(color: context.textSecondary, fontSize: 13)),
     Expanded(child: Text(value,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
+        style: TextStyle(color: context.textPrimary, fontSize: 13, fontWeight: FontWeight.w600),
         overflow: TextOverflow.ellipsis)),
-  ]);
+  ]));
 }

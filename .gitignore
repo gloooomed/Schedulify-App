@@ -49,6 +49,10 @@ dart_defines.json
 .env
 .env.local
 
+# Firebase config — download from Firebase Console, do not commit
+android/app/google-services.json
+GoogleService-Info.plist
+
 # Android local machine config — contains local SDK paths
 android/local.properties
 

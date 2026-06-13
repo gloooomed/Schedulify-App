@@ -57,8 +57,8 @@ class _OverviewTabState extends State<OverviewTab> {
             const SizedBox(height: 28),
             GlassCard(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('System Status', style: TextStyle(fontSize: 16,
-                    fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text('System Status', style: TextStyle(fontSize: 16,
+                    fontWeight: FontWeight.w700, color: context.textPrimary)),
                 const SizedBox(height: 16),
                 _statusRow('Database', true),
                 _statusRow('Supabase Auth', true),
@@ -106,7 +106,7 @@ class _OverviewTabState extends State<OverviewTab> {
         Icon(ok ? Icons.check_circle_rounded : Icons.cancel_rounded,
             color: ok ? AppColors.success : AppColors.danger, size: 18),
         const SizedBox(width: 10),
-        Text(label, style: const TextStyle(color: AppColors.textPrimary, fontSize: 14)),
+        Text(label, style: TextStyle(color: context.textPrimary, fontSize: 14)),
         const Spacer(),
         Text(ok ? 'Operational' : 'Issue detected',
             style: TextStyle(

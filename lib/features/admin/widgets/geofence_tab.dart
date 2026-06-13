@@ -132,7 +132,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                 const SizedBox(width: 8),
                 Text('How to set up',
                     style: TextStyle(fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
+                        color: Theme.of(context).colorScheme.onSurface)),
               ]),
               const SizedBox(height: 12),
               _Step('1', 'Tap the map to drop points around your building corners'),
@@ -196,7 +196,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                               ),
                               child: Center(
                                 child: Text('${e.key + 1}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 10,
                                         fontWeight: FontWeight.w700)),
@@ -242,7 +242,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
         Text(
           '${_points.length} point${_points.length == 1 ? '' : 's'} added'
           '${isClosed ? ' · Long-press a marker to delete it' : ' (need 3+ for polygon)'}',
-          style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
         ),
         const SizedBox(height: 16),
 
@@ -255,7 +255,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                   children: [
                     Text('Polygon Points',
                         style: TextStyle(fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary)),
+                            color: Theme.of(context).colorScheme.onSurface)),
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () => setState(() => _points.clear()),
@@ -278,7 +278,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                       ),
                       child: Center(
                         child: Text('${e.key + 1}',
-                            style: const TextStyle(color: Colors.white,
+                            style: TextStyle(color: Colors.white,
                                 fontSize: 10, fontWeight: FontWeight.w700)),
                       ),
                     ),
@@ -287,13 +287,13 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
                       '${e.value.latitude.toStringAsFixed(6)}, '
                       '${e.value.longitude.toStringAsFixed(6)}',
                       style: TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary,
+                          fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                           fontFamily: 'monospace'),
                     ),
                     const Spacer(),
                     IconButton(
                       icon: Icon(Icons.close_rounded,
-                          size: 16, color: AppColors.textMuted),
+                          size: 16, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)),
                       onPressed: () => _removePoint(e.key),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -318,7 +318,7 @@ class _GeofenceTabState extends ConsumerState<GeofenceTab> {
           Text(
             'Current geofence: "${_existingConfig!.name}" '
             '(${_existingConfig!.polygonPoints.length} points)',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -350,14 +350,14 @@ class _Step extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Center(
-          child: Text(number, style: const TextStyle(
+          child: Text(number, style: TextStyle(
               fontSize: 11, fontWeight: FontWeight.w700,
               color: AppColors.primary)),
         ),
       ),
       const SizedBox(width: 10),
       Expanded(child: Text(text,
-          style: TextStyle(fontSize: 13, color: AppColors.textSecondary))),
+          style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)))),
     ]),
   );
 }

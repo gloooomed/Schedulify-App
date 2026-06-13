@@ -42,11 +42,11 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(builder: (ctx, setSt) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(tt == null ? 'New Timetable' : 'Edit Timetable',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
+                color: Theme.of(context).colorScheme.onSurface)),
         content: SizedBox(
           width: 400,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
@@ -60,20 +60,20 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
             ]),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: deptId, dropdownColor: AppColors.bgCard,
+              value: deptId, dropdownColor: Theme.of(context).colorScheme.surface,
               decoration: InputDecoration(
                 labelText: 'Department',
-                labelStyle: const TextStyle(color: AppColors.textSecondary),
-                filled: true, fillColor: AppColors.glass,
+                labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
+                filled: true, fillColor: Theme.of(context).colorScheme.surface,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border)),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor)),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border)),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor)),
               ),
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               items: [
-                const DropdownMenuItem(value: null, child: Text('— All Departments —',
-                    style: TextStyle(color: AppColors.textMuted))),
+                DropdownMenuItem(value: null, child: Text('— All Departments —',
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)))),
                 ..._depts.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))),
               ],
               onChanged: (v) => setSt(() => deptId = v),
@@ -82,7 +82,7 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted))),
+              child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
@@ -116,11 +116,11 @@ class _TimetablesTabState extends ConsumerState<TimetablesTab> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('Delete Timetable?',
-            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Delete Timetable?',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text('This will delete "${tt.name}" and all its class slots.',
-            style: const TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
@@ -261,11 +261,11 @@ class _TimetableCard extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(tt.name, style: const TextStyle(fontWeight: FontWeight.w700,
-              fontSize: 15, color: AppColors.textPrimary)),
+          Text(tt.name, style: TextStyle(fontWeight: FontWeight.w700,
+              fontSize: 15, color: Theme.of(context).colorScheme.onSurface)),
           Text('${tt.academicYear} · Sem ${tt.semester}'
               '${tt.department != null ? ' · ${tt.department!.name}' : ''}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ])),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -302,7 +302,7 @@ class _TimetableCard extends StatelessWidget {
           _ActionBtn('Archive', Icons.archive_rounded, AppColors.warning, onArchive),
         const Spacer(),
         IconButton(
-            icon: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 20),
+            icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), size: 20),
             onPressed: onEdit, tooltip: 'Edit'),
         IconButton(
             icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 20),

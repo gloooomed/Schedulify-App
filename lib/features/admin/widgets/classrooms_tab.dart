@@ -33,7 +33,7 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
 
     showModalBottomSheet(
       context: context, isScrollControlled: true,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => StatefulBuilder(builder: (ctx, setSt) => Padding(
@@ -41,7 +41,7 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
             bottom: MediaQuery.of(context).viewInsets.bottom + 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(room == null ? 'Add Classroom' : 'Edit Classroom',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
           const SizedBox(height: 20),
           AppTextField(controller: name, label: 'Room Name', hint: 'LH-101', prefixIcon: Icons.room_rounded),
           const SizedBox(height: 14),
@@ -53,12 +53,12 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
           ]),
           const SizedBox(height: 14),
           DropdownButtonFormField<String>(
-            value: roomType, dropdownColor: AppColors.bgCard,
+            value: roomType, dropdownColor: Theme.of(context).colorScheme.surface,
             decoration: InputDecoration(labelText: 'Room Type',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-                filled: true, fillColor: AppColors.glass),
-            style: const TextStyle(color: AppColors.textPrimary),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+                filled: true, fillColor: Theme.of(context).colorScheme.surface),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             items: ['lecture', 'lab', 'seminar', 'auditorium'].map((t) =>
                 DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
             onChanged: (v) => setSt(() => roomType = v!),
@@ -105,7 +105,7 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
                   title: 'Classrooms',
                   subtitle: _loading ? '' : '${_items.length} rooms',
                   action: IconButton(
-                    icon: const Icon(Icons.refresh_rounded, color: AppColors.textSecondary),
+                    icon: Icon(Icons.refresh_rounded, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                     onPressed: _load,
                   ),
                 ),
@@ -137,12 +137,12 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(room.name, style: const TextStyle(fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary, fontSize: 15)),
+                      Text(room.name, style: TextStyle(fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
                       Text(
                         '${room.roomType.toUpperCase()}${room.capacity != null ? ' · ${room.capacity}' : ''}'
                         '${room.building != null ? ' · ${room.building}' : ''}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                       ),
                     ]),
                   ),
@@ -155,7 +155,7 @@ class _ClassroomsTabState extends State<ClassroomsTab> {
                   ),
                   GestureDetector(
                     onTap: () => _showForm(room: room),
-                    child: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 20),
+                    child: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), size: 20),
                   ),
                   const SizedBox(width: 10),
                   GestureDetector(

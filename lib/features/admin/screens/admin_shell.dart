@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/auth_provider.dart';
+import '../../../core/providers/theme_provider.dart';
 import '../../../config/config_store.dart';
 import '../../../shared/widgets/widgets.dart';
 import '../widgets/overview_tab.dart';
@@ -34,16 +35,16 @@ class _AdminShellState extends ConsumerState<AdminShell> {
   }
 
   static const _navItems = [
-    ('overview',    Icons.dashboard_rounded,       'Overview'),
-    ('departments', Icons.business_rounded,         'Departments'),
-    ('courses',     Icons.book_rounded,             'Courses'),
-    ('faculty',     Icons.people_rounded,           'Faculty'),
-    ('students',    Icons.school_rounded,           'Students'),
-    ('classrooms',  Icons.room_rounded,             'Classrooms'),
-    ('timetables',  Icons.calendar_month_rounded,   'Timetables'),
-    ('upload',      Icons.upload_file_rounded,      'Upload'),
-    ('attendance',  Icons.fact_check_rounded,       'Attendance'),
-    ('geofence',    Icons.location_on_rounded,      'Geofence'),
+    ('overview',    Icons.grid_view_rounded,          'Overview'),
+    ('departments', Icons.business_outlined,           'Departments'),
+    ('courses',     Icons.menu_book_outlined,          'Courses'),
+    ('faculty',     Icons.person_outline_rounded,      'Faculty'),
+    ('students',    Icons.school_outlined,             'Students'),
+    ('classrooms',  Icons.meeting_room_outlined,       'Classrooms'),
+    ('timetables',  Icons.calendar_month_outlined,     'Timetables'),
+    ('upload',      Icons.upload_outlined,             'AI Upload'),
+    ('attendance',  Icons.checklist_outlined,          'Attendance'),
+    ('geofence',    Icons.location_on_outlined,        'Geofence'),
   ];
 
   Future<void> _logout() async {
@@ -53,15 +54,15 @@ class _AdminShellState extends ConsumerState<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
+    final user   = ref.watch(currentUserProvider);
     final config = ConfigStore.instance.get();
-
     final screenWidth = MediaQuery.of(context).size.width;
     final showSidebar = screenWidth >= 720;
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildDrawer(user, config),
+      drawer: showSidebar ? null : _buildDrawer(user, config),
+      backgroundColor: context.bgColor,
       body: SafeArea(
         child: Row(
           children: [
@@ -88,33 +89,45 @@ class _AdminShellState extends ConsumerState<AdminShell> {
   }
 
   Widget _buildTopBar(user, config, BuildContext context) {
+    final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
     return Container(
       height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(bottom: BorderSide(color: context.borderColor)),
       ),
       child: Row(
         children: [
           if (MediaQuery.of(context).size.width < 720)
             IconButton(
-              icon: const Icon(Icons.menu_rounded, color: AppColors.textPrimary),
+              icon: Icon(Icons.menu_rounded, color: context.textPrimary),
               onPressed: () => _scaffoldKey.currentState?.openDrawer(),
             ),
           Text(
             _navItems.firstWhere((n) => n.$1 == _section).$3,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
+                color: context.textPrimary),
           ),
           const Spacer(),
+          // Theme toggle
+          IconButton(
+            icon: Icon(
+              isDark ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+              color: context.textSecondary, size: 20,
+            ),
+            tooltip: isDark ? 'Light mode' : 'Dark mode',
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+          ),
+          const SizedBox(width: 4),
           if (user != null) ...[
             RoleBadge(role: user.role),
-            const SizedBox(width: 12),
-            Text(user.fullName, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
+            Text(user.fullName,
+                style: TextStyle(color: context.textSecondary, fontSize: 13)),
+            const SizedBox(width: 4),
             IconButton(
-              icon: const Icon(Icons.logout_rounded, color: AppColors.textMuted, size: 20),
+              icon: Icon(Icons.logout_rounded, color: context.textMuted, size: 20),
               onPressed: _logout,
               tooltip: 'Logout',
             ),
@@ -126,50 +139,51 @@ class _AdminShellState extends ConsumerState<AdminShell> {
 
   Widget _buildSidebar(user, config) {
     return Container(
-      width: 230,
-      decoration: const BoxDecoration(
-        color: AppColors.bgCard,
-        border: Border(right: BorderSide(color: AppColors.border)),
+      width: 220,
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        border: Border(right: BorderSide(color: context.borderColor)),
       ),
       child: _sidebarContent(user, config),
     );
   }
 
   Widget _buildDrawer(user, config) {
-    return Drawer(
-      backgroundColor: AppColors.bgCard,
-      child: _sidebarContent(user, config),
-    );
+    return Drawer(child: _sidebarContent(user, config));
   }
 
   Widget _sidebarContent(user, config) {
     return SafeArea(
       child: Column(
         children: [
+          // Logo area
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
             child: Row(children: [
               Container(
                 width: 36, height: 36,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.primary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.schedule_rounded, color: Colors.white, size: 20),
+                child: const Icon(Icons.calendar_month_rounded,
+                    color: Colors.white, size: 20),
               ),
               const SizedBox(width: 10),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Schedulify', style: TextStyle(fontSize: 16,
-                    fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text('Schedulify',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700,
+                        color: context.textPrimary)),
                 if (config?.collegeName != null)
-                  Text(config!.collegeName!, style: const TextStyle(
-                      fontSize: 11, color: AppColors.textSecondary),
+                  Text(config!.collegeName!,
+                      style: TextStyle(fontSize: 11, color: context.textSecondary),
                       maxLines: 1, overflow: TextOverflow.ellipsis),
               ]),
             ]),
           ),
-          const Divider(height: 1),
+          Divider(height: 1, color: context.borderColor),
           const SizedBox(height: 8),
+          // Nav items
           ..._navItems.map((item) {
             final isActive = _section == item.$1;
             return _NavItem(
@@ -185,9 +199,10 @@ class _AdminShellState extends ConsumerState<AdminShell> {
             );
           }),
           const Spacer(),
-          const Divider(),
+          Divider(height: 1, color: context.borderColor),
+          const SizedBox(height: 4),
           _NavItem(
-            icon: Icons.logout_rounded,
+            icon: Icons.logout_outlined,
             label: 'Logout',
             isActive: false,
             onTap: _logout,
@@ -230,22 +245,24 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = color ?? (isActive ? AppColors.primary : AppColors.textSecondary);
+    final c = color ?? (isActive ? AppColors.primary : context.textSecondary);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withOpacity(0.12) : Colors.transparent,
+          color: isActive ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(children: [
-          Icon(icon, color: c, size: 20),
+          Icon(icon, color: c, size: 19),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: c, fontWeight:
-              isActive ? FontWeight.w600 : FontWeight.w400, fontSize: 14)),
+          Text(label, style: TextStyle(
+              color: c,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+              fontSize: 14)),
         ]),
       ),
     );

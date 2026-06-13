@@ -73,19 +73,19 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
       context: context,
       builder: (_) => StatefulBuilder(builder: (ctx, setSt) {
         return AlertDialog(
-          backgroundColor: AppColors.bgCard,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text(entry == null ? 'Add Class Slot' : 'Edit Class Slot',
-              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontWeight: FontWeight.w700)),
           content: SizedBox(
             width: 440,
             child: SingleChildScrollView(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 DropdownButtonFormField<int>(
                   value: day,
-                  dropdownColor: AppColors.bgCard,
+                  dropdownColor: Theme.of(context).colorScheme.surface,
                   decoration: _deco('Day'),
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   items: List.generate(7, (i) => DropdownMenuItem(value: i,
                       child: Text(_daysFull[i]))),
                   onChanged: (v) => setSt(() => day = v!),
@@ -93,10 +93,10 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: courseId,
-                  dropdownColor: AppColors.bgCard,
+                  dropdownColor: Theme.of(context).colorScheme.surface,
                   isExpanded: true,
                   decoration: _deco('Course *'),
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                   items: _courses.map((c) => DropdownMenuItem(
                       value: c.id,
                       child: Text('${c.code} – ${c.name}',
@@ -106,10 +106,10 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: facultyId,
-                  dropdownColor: AppColors.bgCard,
+                  dropdownColor: Theme.of(context).colorScheme.surface,
                   isExpanded: true,
                   decoration: _deco('Faculty'),
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('— None —')),
                     ..._faculty.map((f) => DropdownMenuItem(
@@ -120,10 +120,10 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: classroomId,
-                  dropdownColor: AppColors.bgCard,
+                  dropdownColor: Theme.of(context).colorScheme.surface,
                   isExpanded: true,
                   decoration: _deco('Classroom'),
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('— None —')),
                     ..._classrooms.map((r) => DropdownMenuItem(
@@ -142,9 +142,9 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: type,
-                  dropdownColor: AppColors.bgCard,
+                  dropdownColor: Theme.of(context).colorScheme.surface,
                   decoration: _deco('Session Type'),
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   items: _types.map((t) => DropdownMenuItem(
                       value: t, child: Text(t[0].toUpperCase() + t.substring(1)))).toList(),
                   onChanged: (v) => setSt(() => type = v!),
@@ -152,7 +152,7 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: groupCtrl,
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   decoration: _deco('Student Group (e.g. CSE-A, optional)'),
                 ),
               ]),
@@ -161,7 +161,7 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+              child: Text('Cancel', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
@@ -205,15 +205,15 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
 
   InputDecoration _deco(String label) => InputDecoration(
     labelText: label,
-    labelStyle: const TextStyle(color: AppColors.textSecondary),
+    labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
     filled: true,
-    fillColor: AppColors.glass,
+    fillColor: Theme.of(context).colorScheme.surface,
     border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.border)),
+        borderSide: BorderSide(color: Theme.of(context).dividerColor)),
     enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: AppColors.border)),
+        borderSide: BorderSide(color: Theme.of(context).dividerColor)),
     focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: const BorderSide(color: AppColors.primary)),
@@ -223,7 +223,7 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
   Widget _timeField(TextEditingController ctrl, String label, BuildContext ctx) =>
       TextFormField(
         controller: ctrl,
-        style: const TextStyle(color: AppColors.textPrimary),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
         decoration: _deco(label),
         readOnly: true,
         onTap: () async {
@@ -245,11 +245,11 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('Delete Slot?', style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Delete Slot?', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Text(
             'Remove ${e.course?.name ?? 'this slot'} on ${_daysFull[e.dayOfWeek]}?',
-            style: const TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
@@ -272,16 +272,16 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
     final isPublished = widget.timetable.status == 'published';
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.bgCard,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(widget.timetable.name,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface)),
           Text('${widget.timetable.academicYear} · ${widget.timetable.semester} · '
               '${widget.timetable.status.toUpperCase()}',
-              style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ]),
         actions: [
           if (!isPublished)
@@ -304,7 +304,7 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
       ),
       body: Column(children: [
         Container(
-          color: AppColors.bgCard,
+          color: Theme.of(context).colorScheme.surface,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: List.generate(7, (i) {
@@ -348,10 +348,10 @@ class _TimetableEntriesScreenState extends State<TimetableEntriesScreen> {
           ? const Center(child: CircularProgressIndicator())
           : _dayEntries.isEmpty
             ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.event_busy_rounded, size: 48, color: AppColors.textMuted),
+                Icon(Icons.event_busy_rounded, size: 48, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)),
                 const SizedBox(height: 12),
                 Text('No classes on ${_daysFull[_selectedDay]}',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 15)),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 15)),
                 const SizedBox(height: 8),
                 TextButton.icon(
                   onPressed: _showEntryForm,
@@ -411,8 +411,8 @@ class _EntryCard extends StatelessWidget {
         const SizedBox(width: 14),
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(entry.course?.name ?? 'Unknown Course',
-              style: const TextStyle(fontWeight: FontWeight.w700,
-                  fontSize: 14, color: AppColors.textPrimary)),
+              style: TextStyle(fontWeight: FontWeight.w700,
+                  fontSize: 14, color: Theme.of(context).colorScheme.onSurface)),
           const SizedBox(height: 3),
           Wrap(spacing: 8, runSpacing: 4, children: [
             if (entry.course?.code != null)
@@ -428,7 +428,7 @@ class _EntryCard extends StatelessWidget {
         ])),
         Column(children: [
           IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.textMuted),
+            icon: Icon(Icons.edit_outlined, size: 20, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)),
             onPressed: onEdit,
             tooltip: 'Edit',
           ),

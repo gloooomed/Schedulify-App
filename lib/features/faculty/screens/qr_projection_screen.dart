@@ -59,13 +59,13 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('End Session?',
-            style: TextStyle(color: AppColors.textPrimary)),
-        content: const Text(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('End Session?',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+        content: Text(
             'This will stop the QR and mark the session as ended. '
             'Students will no longer be able to check in.',
-            style: TextStyle(color: AppColors.textSecondary)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel')),
@@ -109,7 +109,7 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
               backgroundColor: Colors.black,
               foregroundColor: Colors.white,
               title: Text(widget.courseName,
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: Colors.white)),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.fullscreen_rounded, color: Colors.white),
@@ -176,7 +176,7 @@ class _ProjectionViewState extends ConsumerState<_ProjectionView> {
                             color: Colors.white, size: 20),
                         const SizedBox(width: 8),
                         Text('$attendeeCount student${attendeeCount == 1 ? '' : 's'} marked present',
-                            style: const TextStyle(color: Colors.white,
+                            style: TextStyle(color: Colors.white,
                                 fontSize: 16, fontWeight: FontWeight.w600)),
                       ]),
                     ),
@@ -246,7 +246,7 @@ class _RotationIndicatorState extends State<_RotationIndicator>
       builder: (_, __) {
         final remaining = 5 - (_ctrl.value * 5).floor();
         return Text('Refreshes in ${remaining}s',
-            style: const TextStyle(color: Colors.white38, fontSize: 12));
+            style: TextStyle(color: Colors.white38, fontSize: 12));
       },
     ),
     const SizedBox(height: 6),

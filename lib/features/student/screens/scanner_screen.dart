@@ -179,15 +179,15 @@ class _ScannerScreenState extends ConsumerState<ScannerScreen> {
 
 class _CheckingView extends StatelessWidget {
   @override
-  Widget build(BuildContext context) => const Center(
+  Widget build(BuildContext context) => Center(
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       CircularProgressIndicator(),
       SizedBox(height: 24),
       Text('Verifying your location…',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 16)),
       SizedBox(height: 8),
       Text('GPS check in progress',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
     ]),
   );
 }
@@ -215,13 +215,13 @@ class _ErrorView extends StatelessWidget {
               color: AppColors.danger, size: 40),
         ),
         const SizedBox(height: 24),
-        const Text('Cannot Check In',
-            style: TextStyle(color: AppColors.textPrimary,
+        Text('Cannot Check In',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18, fontWeight: FontWeight.w700)),
         const SizedBox(height: 12),
         Text(message,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14)),
         const SizedBox(height: 32),
         PrimaryButton(
           label: 'Try Again',
@@ -245,12 +245,12 @@ class _ResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (submitting) {
-      return const Center(
+      return Center(
         child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
           CircularProgressIndicator(),
           SizedBox(height: 16),
           Text('Recording attendance…',
-              style: TextStyle(color: AppColors.textSecondary)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ]),
       );
     }
@@ -273,7 +273,7 @@ class _ResultView extends StatelessWidget {
           const SizedBox(height: 24),
           Text(
             success ? 'Attendance Marked!' : 'Check-In Failed',
-            style: const TextStyle(color: AppColors.textPrimary,
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 22, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
@@ -282,7 +282,7 @@ class _ResultView extends StatelessWidget {
                 ? 'Your attendance has been recorded successfully.'
                 : (message ?? 'Something went wrong.'),
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14),
           ),
           const SizedBox(height: 40),
           PrimaryButton(

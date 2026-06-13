@@ -66,7 +66,7 @@ class _UsersTabState extends ConsumerState<UsersTab> {
 
     showModalBottomSheet(
       context: context, isScrollControlled: true,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
@@ -78,8 +78,8 @@ class _UsersTabState extends ConsumerState<UsersTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
             Text('Create ${widget.role == 'faculty' ? 'Faculty' : 'Student'}',
-                style: const TextStyle(fontSize: 20,
-                    fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                style: TextStyle(fontSize: 20,
+                    fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 20),
 
             AppTextField(controller: email, label: 'Email',
@@ -98,34 +98,34 @@ class _UsersTabState extends ConsumerState<UsersTab> {
 
             Container(
               decoration: BoxDecoration(
-                color: AppColors.bgSurface,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.border),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<Department>(
                   value: selectedDept,
                   isExpanded: true,
-                  dropdownColor: AppColors.bgCard,
-                  hint: Row(children: const [
+                  dropdownColor: Theme.of(context).colorScheme.surface,
+                  hint: Row(children: [
                     Icon(Icons.business_rounded,
-                        color: AppColors.textMuted, size: 20),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), size: 20),
                     SizedBox(width: 10),
                     Text('Select Department',
-                        style: TextStyle(color: AppColors.textMuted)),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
                   ]),
                   items: [
-                    const DropdownMenuItem<Department>(
+                    DropdownMenuItem<Department>(
                       value: null,
                       child: Text('— No Department —',
-                          style: TextStyle(color: AppColors.textMuted,
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
                               fontSize: 13)),
                     ),
                     ..._departments.map((d) => DropdownMenuItem(
                       value: d,
                       child: Text(d.name,
-                          style: const TextStyle(color: AppColors.textPrimary)),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
                     )),
                   ],
                   onChanged: (d) => setModal(() => selectedDept = d),
@@ -240,9 +240,9 @@ class _UsersTabState extends ConsumerState<UsersTab> {
                     Expanded(child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Text(u.fullName, style: const TextStyle(
+                      Text(u.fullName, style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
+                          color: Theme.of(context).colorScheme.onSurface)),
                       Text(
                         _departments
                             .where((d) => d.id == u.departmentId)
@@ -251,8 +251,8 @@ class _UsersTabState extends ConsumerState<UsersTab> {
                         (widget.role == 'faculty'
                             ? (u.employeeId ?? '')
                             : (u.rollNumber ?? '')),
-                        style: const TextStyle(
-                            fontSize: 12, color: AppColors.textSecondary),
+                        style: TextStyle(
+                            fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                       ),
                     ])),
                     Switch(

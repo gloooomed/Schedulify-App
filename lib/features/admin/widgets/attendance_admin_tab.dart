@@ -36,7 +36,7 @@ class _AttendanceAdminTabState extends ConsumerState<AttendanceAdminTab>
             Tab(text: 'History'),
           ],
           labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textMuted,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
           indicatorColor: AppColors.primary,
         ),
         Expanded(
@@ -112,11 +112,11 @@ class _SessionCard extends ConsumerWidget {
               child: Column(crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text(session.courseName ?? 'Unknown Course',
-                    style: const TextStyle(fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary, fontSize: 15)),
+                    style: TextStyle(fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
                 Text(
                   'Started ${DateFormat('h:mm a').format(session.startedAt.toLocal())}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                 ),
               ]),
             ),
@@ -151,7 +151,7 @@ class _SessionCard extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _RecordsSheet(session: session),
@@ -164,12 +164,12 @@ class _SessionCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.bgCard,
-        title: const Text('Terminate Session',
-            style: TextStyle(color: AppColors.textPrimary)),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        title: Text('Terminate Session',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
           Text('This will end the session immediately. All present records are kept.',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
           const SizedBox(height: 16),
           AppTextField(
             controller: reasonCtrl,
@@ -220,7 +220,7 @@ class _CountBadge extends StatelessWidget {
       const Icon(Icons.people_rounded, size: 14, color: AppColors.success),
       const SizedBox(width: 4),
       Text('$count present',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700,
               color: AppColors.success)),
     ]),
   );
@@ -279,17 +279,17 @@ class _RecordsSheetState extends State<_RecordsSheet> {
       builder: (_, ctrl) => Column(children: [
         const SizedBox(height: 12),
         Container(width: 40, height: 4,
-            decoration: BoxDecoration(color: AppColors.textMuted,
+            decoration: BoxDecoration(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38),
                 borderRadius: BorderRadius.circular(2))),
         Padding(
           padding: const EdgeInsets.all(16),
           child: Row(children: [
             Text(widget.session.courseName ?? 'Session Records',
-                style: const TextStyle(fontWeight: FontWeight.w700,
-                    fontSize: 16, color: AppColors.textPrimary)),
+                style: TextStyle(fontWeight: FontWeight.w700,
+                    fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
             const Spacer(),
             Text('${_records.length} students',
-                style: const TextStyle(color: AppColors.textSecondary,
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                     fontSize: 13)),
           ]),
         ),
@@ -311,10 +311,10 @@ class _RecordsSheetState extends State<_RecordsSheet> {
                         color: _statusColor(r.status), size: 18),
                   ),
                   title: Text(r.studentName ?? r.studentId,
-                      style: const TextStyle(color: AppColors.textPrimary,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.w600)),
                   subtitle: Text(r.rollNumber ?? '',
-                      style: const TextStyle(color: AppColors.textSecondary,
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                           fontSize: 12)),
                   trailing: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -342,13 +342,13 @@ class _RecordsSheetState extends State<_RecordsSheet> {
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (ctx, setSt) => AlertDialog(
-          backgroundColor: AppColors.bgCard,
+          backgroundColor: Theme.of(context).colorScheme.surface,
           title: Text('Override: ${record.studentName ?? 'Student'}',
-              style: const TextStyle(color: AppColors.textPrimary)),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
           content: Column(mainAxisSize: MainAxisSize.min, children: [
             DropdownButton<String>(
               value: selected,
-              dropdownColor: AppColors.bgCard,
+              dropdownColor: Theme.of(context).colorScheme.surface,
               items: ['present', 'absent', 'late', 'excused']
                   .map((s) => DropdownMenuItem(
                       value: s,
@@ -450,13 +450,13 @@ class _SessionHistoryViewState extends State<_SessionHistoryView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Text(s.courseName ?? 'Unknown Course',
-                      style: const TextStyle(fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary)),
+                      style: TextStyle(fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface)),
                   Text(
                     '${DateFormat('d MMM yyyy').format(s.sessionDate)} · '
                     '${DateFormat('h:mm a').format(s.startedAt.toLocal())}',
-                    style: const TextStyle(fontSize: 12,
-                        color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                   ),
                 ])),
                 _StatusChip(s.status),

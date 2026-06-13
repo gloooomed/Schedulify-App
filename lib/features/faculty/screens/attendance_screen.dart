@@ -124,19 +124,19 @@ class _FacultyAttendanceScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text(entry.course?.name ?? 'Unknown Course',
-                          style: const TextStyle(
+                          style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary, fontSize: 15)),
+                              color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
                       Text(
                         '${_fmt(entry.startTime)} – ${_fmt(entry.endTime)}'
                         '${entry.classroom != null ? ' · ${entry.classroom!.name}' : ''}',
-                        style: const TextStyle(fontSize: 13,
-                            color: AppColors.textSecondary),
+                        style: TextStyle(fontSize: 13,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
                       ),
                       Text(
                         entry.sessionType.toUpperCase(),
-                        style: const TextStyle(fontSize: 11,
-                            color: AppColors.textMuted),
+                        style: TextStyle(fontSize: 11,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38)),
                       ),
                     ]),
                   ),

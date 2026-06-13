@@ -63,7 +63,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
         appBar: AppBar(
           title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Student Portal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            if (user != null) Text(user.fullName, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
           ]),
           actions: [
             if (user != null) RoleBadge(role: user.role),
@@ -127,15 +127,15 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                           ? '${user.firstName[0]}${user.lastName[0]}'
                           : user.firstName[0])
                       : '?',
-                  style: const TextStyle(color: AppColors.student,
+                  style: TextStyle(color: AppColors.student,
                       fontWeight: FontWeight.w700, fontSize: 18)),
               ),
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.w700,
-                    fontSize: 16, color: AppColors.textPrimary)),
+                Text(user.fullName, style: TextStyle(fontWeight: FontWeight.w700,
+                    fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
                 if (user.rollNumber != null)
-                  Text(user.rollNumber!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                  Text(user.rollNumber!, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
                 Row(children: [
                   if (user.batch != null)
                     _Tag(user.batch!, AppColors.info),
@@ -164,7 +164,7 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               const Icon(Icons.today_rounded, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text("Today — ${DateFormat('EEEE, d MMM').format(DateTime.now())}",
-                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
             ]),
             const SizedBox(height: 16),
             if (_loading)
@@ -194,8 +194,8 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(days[i], style: const TextStyle(fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary, fontSize: 13)),
+                  child: Text(days[i], style: TextStyle(fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
                 ),
                 ...entries.map((e) => _StudentSlot(entry: e)),
               ]);
@@ -231,18 +231,18 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
                   color: AppColors.info.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(c.code, style: const TextStyle(color: AppColors.info,
+                child: Text(c.code, style: TextStyle(color: AppColors.info,
                     fontWeight: FontWeight.w700, fontSize: 12)),
               ),
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary)),
+                Text(c.name, style: TextStyle(fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface)),
                 Text('${c.credits} Credits · ${c.courseType.toUpperCase()}',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                 if (c.department != null)
                   Text(c.department!.name,
-                      style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
               ])),
               if (c.isElective)
                 _Tag('Elective', AppColors.warning),
@@ -280,13 +280,13 @@ class _StudentSlot extends StatelessWidget {
       ),
       child: Row(children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(entry.course?.name ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary, fontSize: 14)),
+          Text(entry.course?.name ?? 'Unknown', style: TextStyle(fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
           Text(
             '${_fmtTime(entry.startTime)} - ${_fmtTime(entry.endTime)}'
             '${entry.faculty != null ? ' · ${entry.faculty!.fullName}' : ''}'
             '${entry.classroom != null ? ' · ${entry.classroom!.name}' : ''}',
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ])),
         Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(6)),

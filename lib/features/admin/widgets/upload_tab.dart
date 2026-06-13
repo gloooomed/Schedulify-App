@@ -115,13 +115,13 @@ class _UploadTabState extends State<UploadTab> {
           final active = i <= _step;
           return Expanded(child: Row(children: [
             if (i > 0) Expanded(child: Container(height: 1,
-                color: active ? AppColors.primary : AppColors.border)),
+                color: active ? AppColors.primary : Theme.of(context).dividerColor)),
             Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: active ? AppColors.primary : AppColors.bgSurface,
-                border: Border.all(color: active ? AppColors.primary : AppColors.border),
+                color: active ? AppColors.primary : Theme.of(context).colorScheme.surface,
+                border: Border.all(color: active ? AppColors.primary : Theme.of(context).dividerColor),
               ),
               child: Center(child: i < _step
                   ? const Icon(Icons.check, color: Colors.white, size: 14)
@@ -129,13 +129,13 @@ class _UploadTabState extends State<UploadTab> {
                       fontSize: 12, fontWeight: FontWeight.w700))),
             ),
             if (i < 2) Expanded(child: Container(height: 1,
-                color: i < _step ? AppColors.primary : AppColors.border)),
+                color: i < _step ? AppColors.primary : Theme.of(context).dividerColor)),
           ]));
         })),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: ['Upload', 'Preview', 'Done']
-              .map((l) => Text(l, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary))).toList()),
+              .map((l) => Text(l, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)))).toList()),
         ),
         const SizedBox(height: 20),
         if (_error != null)
@@ -145,7 +145,7 @@ class _UploadTabState extends State<UploadTab> {
             decoration: BoxDecoration(color: AppColors.danger.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: AppColors.danger.withOpacity(0.3))),
-            child: Text(_error!, style: const TextStyle(color: AppColors.danger)),
+            child: Text(_error!, style: TextStyle(color: AppColors.danger)),
           ),
         if (_step == 0) _uploadStep(),
         if (_step == 1) _previewStep(),
@@ -156,42 +156,42 @@ class _UploadTabState extends State<UploadTab> {
 
   Widget _uploadStep() => GlassCard(
     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Step 1: Upload Schedule Data',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+      Text('Step 1: Upload Schedule Data',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
       const SizedBox(height: 16),
       GestureDetector(
         onTap: _pickFile,
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.glass,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.border, style: BorderStyle.solid),
+            border: Border.all(color: Theme.of(context).dividerColor, style: BorderStyle.solid),
           ),
-          child: const Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+          child: Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(Icons.upload_file_rounded, color: AppColors.primary, size: 36),
             SizedBox(height: 10),
             Text('Tap to upload CSV/TXT file',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 14)),
           ])),
         ),
       ),
       const SizedBox(height: 16),
-      const Text('Or paste schedule text:',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+      Text('Or paste schedule text:',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
       const SizedBox(height: 8),
       TextFormField(
         controller: _pasteController,
         maxLines: 8,
-        style: const TextStyle(color: AppColors.textPrimary, fontSize: 13),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 13),
         decoration: InputDecoration(
           hintText: 'Monday 9:00-10:00 Mathematics (MATH101) - Dr. Smith - Room LH-101',
-          hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), fontSize: 12),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border)),
+              borderSide: BorderSide(color: Theme.of(context).dividerColor)),
           enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.border)),
-          filled: true, fillColor: AppColors.glass,
+              borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+          filled: true, fillColor: Theme.of(context).colorScheme.surface,
           contentPadding: const EdgeInsets.all(12),
         ),
       ),
@@ -216,13 +216,13 @@ class _UploadTabState extends State<UploadTab> {
             Text('Conflicts Detected', style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700)),
           ]),
           const SizedBox(height: 8),
-          Text(_conflicts!, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+          Text(_conflicts!, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
         ]),
       ),
     GlassCard(
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('${_parsed.length} entries parsed',
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
         const SizedBox(height: 16),
         ..._parsed.take(5).map((e) => Padding(
           padding: const EdgeInsets.only(bottom: 10),
@@ -232,34 +232,34 @@ class _UploadTabState extends State<UploadTab> {
               decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8)),
               child: Center(child: Text('${e['dayOfWeek'] ?? 0}',
-                  style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700))),
+                  style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w700))),
             ),
             const SizedBox(width: 12),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${e['courseName']} (${e['courseCode']})',
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 13)),
+                  style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, fontSize: 13)),
               Text('${e['startTime']} - ${e['endTime']} · ${e['facultyName']} · ${e['roomName']}',
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
             ])),
           ]),
         )),
         if (_parsed.length > 5)
           Text('...and ${_parsed.length - 5} more entries',
-              style: const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
         const SizedBox(height: 20),
         if (_timetables.isEmpty)
           const Text('No draft timetables found. Create one first.',
               style: TextStyle(color: AppColors.danger))
         else ...[
           DropdownButtonFormField<String>(
-            value: _selectedTimetableId, dropdownColor: AppColors.bgCard,
+            value: _selectedTimetableId, dropdownColor: Theme.of(context).colorScheme.surface,
             decoration: InputDecoration(labelText: 'Save to Timetable',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border)),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor)),
                 enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border)),
-                filled: true, fillColor: AppColors.glass),
-            style: const TextStyle(color: AppColors.textPrimary),
+                    borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+                filled: true, fillColor: Theme.of(context).colorScheme.surface),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             items: _timetables.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
             onChanged: (v) => setState(() => _selectedTimetableId = v),
           ),
@@ -275,11 +275,11 @@ class _UploadTabState extends State<UploadTab> {
     child: Column(children: [
       const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 56),
       const SizedBox(height: 16),
-      const Text('Entries Saved!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary)),
+      Text('Entries Saved!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.onSurface)),
       const SizedBox(height: 8),
       Text('${_parsed.length} timetable entries were saved successfully.',
-          style: const TextStyle(color: AppColors.textSecondary), textAlign: TextAlign.center),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)), textAlign: TextAlign.center),
       const SizedBox(height: 24),
       PrimaryButton(label: 'Upload Another', icon: Icons.upload_rounded,
           width: double.infinity,

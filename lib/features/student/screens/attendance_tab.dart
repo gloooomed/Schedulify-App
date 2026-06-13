@@ -27,15 +27,15 @@ class StudentAttendanceTab extends ConsumerWidget {
               const Icon(Icons.qr_code_scanner_rounded,
                   size: 48, color: AppColors.primary),
               const SizedBox(height: 12),
-              const Text('Mark Your Attendance',
+              Text('Mark Your Attendance',
                   style: TextStyle(fontWeight: FontWeight.w700,
-                      fontSize: 16, color: AppColors.textPrimary)),
+                      fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Tap below when your faculty has started a session.\n'
                 'You must be inside the campus to scan.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)),
               ),
               const SizedBox(height: 16),
               SizedBox(
@@ -63,7 +63,7 @@ class StudentAttendanceTab extends ConsumerWidget {
                     child: ShimmerBox(height: 70, radius: 12)))),
             error: (e, _) => Center(
                 child: Text('Error loading history: $e',
-                    style: const TextStyle(color: AppColors.danger))),
+                    style: TextStyle(color: AppColors.danger))),
             data: (records) {
               if (records.isEmpty) {
                 return const EmptyState(
@@ -91,9 +91,9 @@ class StudentAttendanceTab extends ConsumerWidget {
                   ]),
                 ),
                 const SizedBox(height: 16),
-                const Text('Recent Records',
+                Text('Recent Records',
                     style: TextStyle(fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary, fontSize: 15)),
+                        color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
                 const SizedBox(height: 10),
                 ...records.take(30).map((r) {
                   final session = r['attendance_sessions'] as Map?;
@@ -125,11 +125,11 @@ class StudentAttendanceTab extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                           Text(courseName,
-                              style: const TextStyle(fontWeight: FontWeight.w600,
-                                  color: AppColors.textPrimary, fontSize: 14)),
+                              style: TextStyle(fontWeight: FontWeight.w600,
+                                  color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
                           Text('$courseCode · $date',
-                              style: const TextStyle(fontSize: 12,
-                                  color: AppColors.textSecondary)),
+                              style: TextStyle(fontSize: 12,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                         ])),
                         _StatusChip(status),
                       ]),
@@ -154,8 +154,8 @@ class _StatPill extends StatelessWidget {
   Widget build(BuildContext context) => Expanded(child: Column(children: [
     Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800,
         color: color)),
-    Text(label, style: const TextStyle(fontSize: 11,
-        color: AppColors.textSecondary)),
+    Text(label, style: TextStyle(fontSize: 11,
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
   ]));
 }
 

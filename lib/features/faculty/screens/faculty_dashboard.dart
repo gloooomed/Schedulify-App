@@ -61,7 +61,7 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
         appBar: AppBar(
           title: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Faculty Dashboard', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
-            if (user != null) Text(user.fullName, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+            if (user != null) Text(user.fullName, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
           ]),
           actions: [
             if (user != null) RoleBadge(role: user.role),
@@ -139,7 +139,7 @@ class _ScheduleView extends StatelessWidget {
                       const Icon(Icons.today_rounded, color: AppColors.primary, size: 20),
                       const SizedBox(width: 8),
                       Text("Today — ${DateFormat('EEEE, d MMM').format(DateTime.now())}",
-                          style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
+                          style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary, fontSize: 15)),
                     ]),
                     const SizedBox(height: 16),
                     if (loading)
@@ -198,7 +198,7 @@ class _ScheduleView extends StatelessWidget {
                     const SizedBox(height: 12),
                     if (selectedEntries.isNotEmpty) ...[
                       Text(DateFormat('EEEE classes').format(selectedDay),
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 13)),
                       const SizedBox(height: 8),
                       ...selectedEntries.map((e) => _ClassSlot(entry: e)),
                     ],
@@ -250,11 +250,11 @@ class _ClassSlot extends StatelessWidget {
       child: Row(children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(entry.course?.name ?? 'Unknown Course',
-              style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textPrimary, fontSize: 14)),
+              style: TextStyle(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.onSurface, fontSize: 14)),
           Text('${entry.startTime.substring(0, 5)} - ${entry.endTime.substring(0, 5)}'
               '${entry.classroom != null ? ' · ${entry.classroom!.name}' : ''}'
               '${entry.studentGroup != null ? ' · ${entry.studentGroup}' : ''}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
         ])),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -278,9 +278,9 @@ class _MiniStat extends StatelessWidget {
     child: Column(children: [
       Icon(icon, color: color, size: 22),
       const SizedBox(height: 4),
-      Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary)),
-      Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+      Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
+          color: Theme.of(context).colorScheme.onSurface)),
+      Text(label, style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
     ]),
   );
 }

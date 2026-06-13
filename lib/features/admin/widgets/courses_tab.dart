@@ -46,7 +46,7 @@ class _CoursesTabState extends State<CoursesTab> {
 
     showModalBottomSheet(
       context: context, isScrollControlled: true,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => StatefulBuilder(
@@ -57,8 +57,8 @@ class _CoursesTabState extends State<CoursesTab> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(course == null ? 'Add Course' : 'Edit Course',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary)),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
+                    color: Theme.of(context).colorScheme.onSurface)),
             const SizedBox(height: 20),
             AppTextField(controller: name, label: 'Course Name', prefixIcon: Icons.book_rounded),
             const SizedBox(height: 14),
@@ -72,14 +72,14 @@ class _CoursesTabState extends State<CoursesTab> {
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
               value: deptId,
-              dropdownColor: AppColors.bgCard,
+              dropdownColor: Theme.of(context).colorScheme.surface,
               decoration: InputDecoration(labelText: 'Department',
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border)),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppColors.border)),
-                  filled: true, fillColor: AppColors.glass),
-              style: const TextStyle(color: AppColors.textPrimary),
+                      borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+                  filled: true, fillColor: Theme.of(context).colorScheme.surface),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               items: _depts.map((d) => DropdownMenuItem(value: d.id,
                   child: Text(d.name))).toList(),
               onChanged: (v) => setSt(() => deptId = v),
@@ -90,14 +90,14 @@ class _CoursesTabState extends State<CoursesTab> {
             Row(children: [
               Expanded(child: DropdownButtonFormField<String>(
                 value: courseType,
-                dropdownColor: AppColors.bgCard,
+                dropdownColor: Theme.of(context).colorScheme.surface,
                 decoration: InputDecoration(labelText: 'Type',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border)),
+                        borderSide: BorderSide(color: Theme.of(context).dividerColor)),
                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border)),
-                    filled: true, fillColor: AppColors.glass),
-                style: const TextStyle(color: AppColors.textPrimary),
+                        borderSide: BorderSide(color: Theme.of(context).dividerColor)),
+                    filled: true, fillColor: Theme.of(context).colorScheme.surface),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 items: ['theory', 'lab', 'tutorial'].map((t) =>
                     DropdownMenuItem(value: t, child: Text(t.toUpperCase()))).toList(),
                 onChanged: (v) => setSt(() => courseType = v!),
@@ -106,7 +106,7 @@ class _CoursesTabState extends State<CoursesTab> {
               Row(children: [
                 Checkbox(value: isElective, activeColor: AppColors.primary,
                     onChanged: (v) => setSt(() => isElective = v!)),
-                const Text('Elective', style: TextStyle(color: AppColors.textSecondary)),
+                Text('Elective', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
               ]),
             ]),
             const SizedBox(height: 20),
@@ -182,13 +182,13 @@ class _CoursesTabState extends State<CoursesTab> {
                   ]),
                   const SizedBox(width: 14),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary)),
+                    Text(c.name, style: TextStyle(fontWeight: FontWeight.w600,
+                        color: Theme.of(context).colorScheme.onSurface)),
                     Text('${c.credits} Credits · ${c.courseType.toUpperCase()}'
                         '${c.department != null ? ' · ${c.department!.code}' : ''}',
-                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
                   ])),
-                  IconButton(icon: const Icon(Icons.edit_outlined, color: AppColors.textMuted, size: 18),
+                  IconButton(icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), size: 18),
                       onPressed: () => _showForm(course: c)),
                   IconButton(icon: const Icon(Icons.delete_outline, color: AppColors.danger, size: 18),
                       onPressed: () async { await DbService.deleteCourse(c.id); _load(); }),
@@ -215,9 +215,9 @@ class _FilterChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.glass,
+          color: selected ? AppColors.primary : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.border),
+          border: Border.all(color: selected ? AppColors.primary : Theme.of(context).dividerColor),
         ),
         child: Text(label, style: TextStyle(
             color: selected ? Colors.white : AppColors.textSecondary,

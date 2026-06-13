@@ -32,7 +32,7 @@ class _DepartmentsTabState extends State<DepartmentsTab> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.bgCard,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => Padding(
@@ -41,8 +41,8 @@ class _DepartmentsTabState extends State<DepartmentsTab> {
             bottom: MediaQuery.of(context).viewInsets.bottom + 20),
         child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(dept == null ? 'Add Department' : 'Edit Department',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.onSurface)),
           const SizedBox(height: 20),
           AppTextField(controller: name, label: 'Department Name',
               hint: 'Computer Science', prefixIcon: Icons.business_rounded),
@@ -97,8 +97,8 @@ class _DepartmentsTabState extends State<DepartmentsTab> {
           padding: const EdgeInsets.all(20),
           children: [
             PageHeader(title: 'Departments', subtitle: '${_items.length} departments',
-              action: IconButton(icon: const Icon(Icons.refresh_rounded,
-                  color: AppColors.textSecondary), onPressed: _load),
+              action: IconButton(icon: Icon(Icons.refresh_rounded,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6)), onPressed: _load),
             ),
             const SizedBox(height: 20),
             if (_loading)
@@ -144,19 +144,19 @@ class _DeptCard extends StatelessWidget {
             child: Text(dept.code,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: AppColors.primary,
+                style: TextStyle(color: AppColors.primary,
                     fontWeight: FontWeight.w700, fontSize: 12)),
           ),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(dept.name, style: const TextStyle(fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary, fontSize: 15)),
+            Text(dept.name, style: TextStyle(fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 15)),
             if (dept.head != null)
               Text('HOD: ${dept.head!.fullName}',
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
           ])),
-          IconButton(icon: const Icon(Icons.edit_outlined,
-              color: AppColors.textMuted, size: 20), onPressed: onEdit),
+          IconButton(icon: Icon(Icons.edit_outlined,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38), size: 20), onPressed: onEdit),
           IconButton(icon: const Icon(Icons.delete_outline,
               color: AppColors.danger, size: 20), onPressed: onDelete),
         ]),
