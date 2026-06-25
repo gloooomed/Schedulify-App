@@ -26,13 +26,24 @@ class AdminShell extends ConsumerStatefulWidget {
 }
 
 class _AdminShellState extends ConsumerState<AdminShell> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late String _section;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _hasServiceKey = false;
 
   @override
   void initState() {
     super.initState();
     _section = widget.initialSection;
+    _checkServiceKey();
+  }
+
+  Future<void> _checkServiceKey() async {
+    final cfg = await ConfigStore.instance.getAsync();
+    if (mounted) {
+      setState(() {
+        _hasServiceKey = cfg?.serviceRoleKey != null && cfg!.serviceRoleKey!.isNotEmpty;
+      });
+    }
   }
 
   static const _navItems = [
@@ -91,6 +102,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
 
   Widget _buildTopBar(user, config, BuildContext context) {
     final isDark = ref.watch(themeModeProvider) == ThemeMode.dark;
+    final hasServiceKey = _hasServiceKey;
     return Container(
       height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -111,6 +123,30 @@ class _AdminShellState extends ConsumerState<AdminShell> {
                 color: context.textPrimary),
           ),
           const Spacer(),
+          // Service role key button
+          Tooltip(
+            message: hasServiceKey
+                ? 'Service role key is set ✓'
+                : 'Set service role key (required for user management)',
+            child: IconButton(
+              icon: Stack(
+                children: [
+                  Icon(Icons.key_rounded,
+                      color: hasServiceKey ? AppColors.success : AppColors.warning, size: 20),
+                  if (!hasServiceKey)
+                    Positioned(
+                      right: 0, top: 0,
+                      child: Container(
+                        width: 7, height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.warning, shape: BoxShape.circle),
+                      ),
+                    ),
+                ],
+              ),
+              onPressed: () => _showServiceKeySheet(context),
+            ),
+          ),
           // Theme toggle
           IconButton(
             icon: Icon(
@@ -137,6 +173,80 @@ class _AdminShellState extends ConsumerState<AdminShell> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  void _showServiceKeySheet(BuildContext context) async {
+    final config = await ConfigStore.instance.getAsync();
+    final ctrl = TextEditingController(text: config?.serviceRoleKey ?? '');
+    if (!context.mounted) return;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.surfaceColor,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+            left: 20, right: 20, top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Icon(Icons.key_rounded, color: AppColors.warning, size: 22),
+              const SizedBox(width: 10),
+              Text('Service Role Key',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700,
+                      color: context.textPrimary)),
+            ]),
+            const SizedBox(height: 8),
+            Text(
+              'Required for creating and deleting users. Find it in:\n'
+              'Supabase Dashboard → Settings → API → service_role',
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: ctrl,
+              label: 'service_role key',
+              obscureText: true,
+              prefixIcon: Icons.vpn_key_outlined,
+              hint: 'eyJhbGciOiJIUzI1NiIsInR5c...',
+            ),
+            const SizedBox(height: 20),
+            PrimaryButton(
+              label: 'Save Key',
+              width: double.infinity,
+              onPressed: () async {
+                final current = await ConfigStore.instance.getAsync();
+                if (current == null) return;
+                await ConfigStore.instance.set(AppConfig(
+                  supabaseUrl:     current.supabaseUrl,
+                  supabaseAnonKey: current.supabaseAnonKey,
+                  collegeName:     current.collegeName,
+                  collegeId:       current.collegeId,
+                  setupComplete:   current.setupComplete,
+                  serviceRoleKey:  ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
+                ));
+                if (ctx.mounted) Navigator.pop(ctx);
+                _checkServiceKey();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Service role key saved.'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }
