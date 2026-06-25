@@ -22,6 +22,7 @@ dependencies:
 
   # Local storage
   shared_preferences: ^2.3.5
+  flutter_secure_storage: ^9.2.4   # encrypted storage for sensitive keys (service role)
 
   # Calendar
   table_calendar: ^3.2.0

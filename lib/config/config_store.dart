@@ -1,5 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class AppConfig {
   final String supabaseUrl;
   final String supabaseAnonKey;
@@ -31,11 +31,32 @@ class ConfigStore {
   ConfigStore._();
 
   SharedPreferences? _prefs;
+  final _secureStorage = const FlutterSecureStorage();
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  Future<AppConfig?> getAsync() async {
+    final url     = _prefs?.getString(_keyUrl);
+    final anonKey = _prefs?.getString(_keyAnonKey);
+    final setupComplete = _prefs?.getBool(_keySetupComplete) ?? false;
+    if (url == null || anonKey == null) return null;
+    
+    final serviceRole = await _secureStorage.read(key: _keyServiceRole);
+    
+    return AppConfig(
+      supabaseUrl:    url,
+      supabaseAnonKey: anonKey,
+      serviceRoleKey: serviceRole,
+      collegeName:    _prefs?.getString(_keyCollegeName),
+      collegeId:      _prefs?.getString(_keyCollegeId),
+      setupComplete:  setupComplete,
+    );
+  }
+
+  // Keep synchronous get() but it won't have the service role key.
+  // We need to update auth_provider and admin_shell to use getAsync().
   AppConfig? get() {
     final url     = _prefs?.getString(_keyUrl);
     final anonKey = _prefs?.getString(_keyAnonKey);
@@ -44,7 +65,7 @@ class ConfigStore {
     return AppConfig(
       supabaseUrl:    url,
       supabaseAnonKey: anonKey,
-      serviceRoleKey: _prefs?.getString(_keyServiceRole),
+      serviceRoleKey: null, // Cannot be read synchronously
       collegeName:    _prefs?.getString(_keyCollegeName),
       collegeId:      _prefs?.getString(_keyCollegeId),
       setupComplete:  setupComplete,
@@ -56,7 +77,9 @@ class ConfigStore {
     await _prefs?.setString(_keyAnonKey, config.supabaseAnonKey);
     await _prefs?.setBool(_keySetupComplete, config.setupComplete);
     if (config.serviceRoleKey != null) {
-      await _prefs?.setString(_keyServiceRole, config.serviceRoleKey!);
+      await _secureStorage.write(key: _keyServiceRole, value: config.serviceRoleKey!);
+    } else {
+      await _secureStorage.delete(key: _keyServiceRole);
     }
     if (config.collegeName != null) {
       await _prefs?.setString(_keyCollegeName, config.collegeName!);
@@ -69,7 +92,7 @@ class ConfigStore {
   Future<void> clear() async {
     await _prefs?.remove(_keyUrl);
     await _prefs?.remove(_keyAnonKey);
-    await _prefs?.remove(_keyServiceRole);
+    await _secureStorage.delete(key: _keyServiceRole);
     await _prefs?.remove(_keyCollegeName);
     await _prefs?.remove(_keyCollegeId);
     await _prefs?.setBool(_keySetupComplete, false);
