@@ -149,11 +149,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     try {
       final config = await _getConfig();
-      final serviceKey = config.$3; // service role key
+      final serviceKey = config.$3;
+      final base = config.$1.replaceAll(RegExp(r'/$'), '');
 
       if (serviceKey != null && serviceKey.isNotEmpty) {
-        final base = config.$1.replaceAll(RegExp(r'/$'), '');
-        final authRes = await http.post(
+        // ── Try to create the auth user ───────────────────────────────────────
+        var authRes = await http.post(
           Uri.parse('$base/auth/v1/admin/users'),
           headers: {
             'Content-Type': 'application/json',
@@ -167,9 +168,73 @@ class AuthNotifier extends StateNotifier<AuthState> {
             'user_metadata': profileData,
           }),
         );
+
+        // ── Handle orphaned auth user (profile deleted but auth user remains) ─
+        // Error 422 user_already_exists → check if their profile exists.
+        // If no profile → orphaned auth user → delete it and retry.
+        if (authRes.statusCode == 422) {
+          final errorBody = jsonDecode(authRes.body);
+          if (errorBody['code'] == 'user_already_exists') {
+            // List all users and find by email (GoTrue doesn't support email filter in query)
+            final listRes = await http.get(
+              Uri.parse('$base/auth/v1/admin/users?per_page=1000&page=1'),
+              headers: {
+                'apikey': serviceKey,
+                'Authorization': 'Bearer $serviceKey',
+              },
+            );
+            if (listRes.statusCode == 200) {
+              final allUsers = (jsonDecode(listRes.body)['users'] as List?) ?? [];
+              // Find the user with matching email (case-insensitive)
+              final match = allUsers.firstWhere(
+                (u) => (u['email'] as String?)?.toLowerCase() == email.toLowerCase(),
+                orElse: () => <String, dynamic>{},
+              );
+              final existingId = match['id'] as String?;
+              if (existingId != null) {
+                // Check if a profile exists for this auth user
+                final profileCheck = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', existingId)
+                    .maybeSingle();
+                if (profileCheck == null) {
+                  // Orphaned auth user — safe to delete and recreate
+                  await http.delete(
+                    Uri.parse('$base/auth/v1/admin/users/$existingId'),
+                    headers: {
+                      'apikey': serviceKey,
+                      'Authorization': 'Bearer $serviceKey',
+                    },
+                  );
+                  // Retry creation
+                  authRes = await http.post(
+                    Uri.parse('$base/auth/v1/admin/users'),
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'apikey': serviceKey,
+                      'Authorization': 'Bearer $serviceKey',
+                    },
+                    body: jsonEncode({
+                      'email': email,
+                      'password': password,
+                      'email_confirm': true,
+                      'user_metadata': profileData,
+                    }),
+                  );
+                } else {
+                  // Profile exists — real conflict
+                  return 'A user with this email already exists.';
+                }
+              }
+            }
+          }
+        }
+
         if (authRes.statusCode > 299) {
           return 'Failed to create user: ${authRes.body}';
         }
+
         final userId = jsonDecode(authRes.body)['id'] as String;
         await supabase.from('profiles').insert({
           'id': userId,
@@ -177,7 +242,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
           ...profileData,
         });
         return null;
+
       } else {
+        // No service role key — fall back to signUp
         final isolatedClient = SupabaseClient(
           config.$1, config.$2,
           authOptions: const FlutterAuthClientOptions(
@@ -200,6 +267,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return e.toString();
     }
   }
+
 
   Future<String?> deleteUser(String userId) async {
     try {
@@ -230,7 +298,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<(String, String, String?)> _getConfig() async {
-    final cfg = ConfigStore.instance.get();
+    final cfg = await ConfigStore.instance.getAsync();
     if (cfg == null) throw StateError('No college config found');
     return (cfg.supabaseUrl, cfg.supabaseAnonKey, cfg.serviceRoleKey);
   }
