@@ -21,6 +21,10 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   List<TimetableEntry> _schedule = [];
   List<Course> _courses = [];
   bool _loading = true;
+  bool _loadingCourses = false;
+  bool _coursesLoaded = false;
+  String? _error;
+  String? _coursesError;
   String _section = 'schedule';
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -33,26 +37,33 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadSchedule());
   }
 
-  Future<void> _load() async {
+  Future<void> _loadSchedule({bool forceRefresh = false}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
-      final r = await Future.wait([
-        DbService.getStudentSchedule(user.id),
-        DbService.getStudentCourses(user.id),
-      ]);
-      setState(() {
-        _schedule = r[0] as List<TimetableEntry>;
-        _courses  = r[1] as List<Course>;
-        _loading  = false;
-      });
-    } catch (e, st) {
-      debugPrint('StudentDashboard load error: $e\n$st');
-      setState(() => _loading = false);
+      final data = await DbService.getStudentSchedule(user.id, forceRefresh: forceRefresh);
+      if (mounted) setState(() { _schedule = data; _loading = false; });
+    } catch (e) {
+      debugPrint('StudentDashboard schedule error: $e');
+      if (mounted) setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  Future<void> _loadCourses({bool forceRefresh = false}) async {
+    if (_loadingCourses) return;
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+    setState(() { _loadingCourses = true; _coursesError = null; });
+    try {
+      final data = await DbService.getStudentCourses(user.id);
+      if (mounted) setState(() { _courses = data; _loadingCourses = false; _coursesLoaded = true; });
+    } catch (e) {
+      debugPrint('StudentDashboard courses error: $e');
+      if (mounted) setState(() { _loadingCourses = false; _coursesError = e.toString(); });
     }
   }
 
@@ -178,7 +189,12 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             return _NavItem(
               icon: item.$2, label: item.$3, isActive: isActive,
               onTap: () {
-                setState(() => _section = item.$1);
+                final newSection = item.$1;
+                setState(() => _section = newSection);
+                // Lazy-load courses on first visit
+                if (newSection == 'courses' && !_coursesLoaded && !_loadingCourses) {
+                  _loadCourses();
+                }
                 if (MediaQuery.of(context).size.width < 720) Navigator.of(context).pop();
               },
             );
@@ -200,24 +216,38 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
       'courses'    => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: RefreshIndicator(onRefresh: _load, color: AppColors.primary,
-                child: _coursesView()),
+            child: RefreshIndicator(
+              onRefresh: () => _loadCourses(forceRefresh: true),
+              color: AppColors.primary,
+              child: _coursesView(),
+            ),
           ),
         ),
       _ => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: RefreshIndicator(onRefresh: _load, color: AppColors.primary,
-                child: _scheduleView(user)),
+            child: RefreshIndicator(
+              onRefresh: () => _loadSchedule(forceRefresh: true),
+              color: AppColors.primary,
+              child: _scheduleView(user),
+            ),
           ),
         ),
     };
   }
 
   Widget _scheduleView(Profile? user) {
+    // Error state
+    if (_error != null) {
+      return ErrorView(
+        message: 'Could not load your schedule. Check your connection.',
+        onRetry: () => _loadSchedule(forceRefresh: true),
+      );
+    }
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
+        // ── Profile card ──
         if (user != null)
           GlassCard(
             child: Row(children: [
@@ -234,9 +264,9 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               const SizedBox(width: 16),
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(user.fullName, style: TextStyle(fontWeight: FontWeight.w700,
-                    fontSize: 16, color: Theme.of(context).colorScheme.onSurface)),
+                    fontSize: 16, color: context.textPrimary)),
                 if (user.rollNumber != null)
-                  Text(user.rollNumber!, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
+                  Text(user.rollNumber!, style: TextStyle(color: context.textSecondary, fontSize: 13)),
                 Row(children: [
                   if (user.batch != null) _Tag(user.batch!, AppColors.info),
                   if (user.semester != null) ...[
@@ -248,21 +278,26 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
             ]),
           ),
         const SizedBox(height: 20),
-        Row(children: [
-          Expanded(child: StatCard(label: 'Total Classes', value: '${_schedule.length}',
-              icon: Icons.class_rounded, color: AppColors.primary)),
-          const SizedBox(width: 12),
-          Expanded(child: StatCard(label: 'Enrolled Courses', value: '${_courses.length}',
-              icon: Icons.menu_book_rounded, color: AppColors.info)),
-        ]),
+        // ── Stat row (skeleton or real) ──
+        if (_loading)
+          const SkeletonStatRow()
+        else
+          Row(children: [
+            Expanded(child: StatCard(label: 'Weekly Classes', value: '${_schedule.length}',
+                icon: Icons.class_rounded, color: AppColors.primary)),
+            const SizedBox(width: 12),
+            Expanded(child: StatCard(label: 'Today', value: '${_todayClasses.length}',
+                icon: Icons.today_rounded, color: AppColors.info)),
+          ]),
         const SizedBox(height: 20),
+        // ── Today's classes ──
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               const Icon(Icons.today_rounded, color: AppColors.primary, size: 20),
               const SizedBox(width: 8),
               Text("Today — ${DateFormat('EEEE, d MMM').format(DateTime.now())}",
-                  style: TextStyle(fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurface)),
+                  style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary)),
             ]),
             const SizedBox(height: 16),
             if (_loading)
@@ -276,25 +311,30 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
           ]),
         ),
         const SizedBox(height: 20),
+        // ── Full week ──
         GlassCard(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Full Week', style: TextStyle(fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary, fontSize: 15)),
             const SizedBox(height: 16),
-            ...List.generate(6, (i) {
-              final days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-              final entries = _schedule.where((e) => e.dayOfWeek == i + 1).toList()
-                ..sort((a, b) => a.startTime.compareTo(b.startTime));
-              if (entries.isEmpty) return const SizedBox.shrink();
-              return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(days[i], style: TextStyle(fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 13)),
-                ),
-                ...entries.map((e) => _StudentSlot(entry: e)),
-              ]);
-            }),
+            if (_loading)
+              ...List.generate(3, (_) => const Padding(padding: EdgeInsets.only(bottom: 8),
+                  child: SkeletonListTile()))
+            else
+              ...List.generate(6, (i) {
+                final days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                final entries = _schedule.where((e) => e.dayOfWeek == i + 1).toList()
+                  ..sort((a, b) => a.startTime.compareTo(b.startTime));
+                if (entries.isEmpty) return const SizedBox.shrink();
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Text(days[i], style: TextStyle(fontWeight: FontWeight.w600,
+                        color: context.textSecondary, fontSize: 13)),
+                  ),
+                  ...entries.map((e) => _StudentSlot(entry: e)),
+                ]);
+              }),
           ]),
         ),
       ],
@@ -302,10 +342,16 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   }
 
   Widget _coursesView() {
-    if (_loading) {
+    if (_coursesError != null) {
+      return ErrorView(
+        message: 'Could not load your courses. Pull down to retry.',
+        onRetry: () => _loadCourses(forceRefresh: true),
+      );
+    }
+    if (_loadingCourses) {
       return ListView(padding: const EdgeInsets.all(16),
-          children: List.generate(5, (_) => Padding(padding: const EdgeInsets.only(bottom: 10),
-              child: ShimmerBox(height: 72, radius: 14))));
+          children: List.generate(5, (_) => const Padding(padding: EdgeInsets.only(bottom: 10),
+              child: SkeletonCard(height: 72))));
     }
     if (_courses.isEmpty) {
       return const Center(child: EmptyState(icon: Icons.menu_book_rounded,
@@ -331,13 +377,12 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
               ),
               const SizedBox(width: 14),
               Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(c.name, style: TextStyle(fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface)),
+                Text(c.name, style: TextStyle(fontWeight: FontWeight.w600, color: context.textPrimary)),
                 Text('${c.credits} Credits · ${c.courseType.toUpperCase()}',
-                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6))),
+                    style: TextStyle(fontSize: 12, color: context.textSecondary)),
                 if (c.department != null)
                   Text(c.department!.name,
-                      style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.38))),
+                      style: TextStyle(fontSize: 11, color: context.textMuted)),
               ])),
               if (c.isElective) _Tag('Elective', AppColors.warning),
             ]),

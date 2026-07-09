@@ -1,5 +1,6 @@
 import '../models/models.dart';
 import 'supabase_client.dart';
+import 'cache_service.dart';
 
 class DbService {
   static Future<List<Course>> getCourses() async {
@@ -135,7 +136,16 @@ class DbService {
     return (res as List).map((j) => TimetableEntry.fromJson(j)).toList();
   }
 
-  static Future<List<TimetableEntry>> getFacultySchedule(String facultyId) async {
+  static Future<List<TimetableEntry>> getFacultySchedule(String facultyId, {bool forceRefresh = false}) async {
+    const cacheKey = 'faculty_schedule';
+    if (!forceRefresh) {
+      final cached = await CacheService.read(cacheKey);
+      if (cached != null) {
+        try {
+          return (cached as List).map((j) => TimetableEntry.fromJson(Map<String, dynamic>.from(j as Map))).toList();
+        } catch (_) {}
+      }
+    }
     final res = await supabase
         .from('timetable_entries')
         .select('''
@@ -146,10 +156,20 @@ class DbService {
         ''')
         .eq('faculty_id', facultyId)
         .eq('timetables.is_active', true);
+    await CacheService.write(cacheKey, res);
     return (res as List).map((j) => TimetableEntry.fromJson(j)).toList();
   }
 
-  static Future<List<TimetableEntry>> getStudentSchedule(String studentId) async {
+  static Future<List<TimetableEntry>> getStudentSchedule(String studentId, {bool forceRefresh = false}) async {
+    final cacheKey = 'student_schedule_$studentId';
+    if (!forceRefresh) {
+      final cached = await CacheService.read(cacheKey);
+      if (cached != null) {
+        try {
+          return (cached as List).map((j) => TimetableEntry.fromJson(Map<String, dynamic>.from(j as Map))).toList();
+        } catch (_) {}
+      }
+    }
     final enrollments = await supabase
         .from('student_enrollments')
         .select('course_id')
@@ -168,6 +188,7 @@ class DbService {
         ''')
         .inFilter('course_id', courseIds)
         .eq('timetables.is_active', true);
+    await CacheService.write(cacheKey, res);
     return (res as List).map((j) => TimetableEntry.fromJson(j)).toList();
   }
 
@@ -222,6 +243,92 @@ class DbService {
       'classrooms': (futures[2] as List).length,
       'users': (futures[3] as List).length,
       'activeTimetables': (futures[4] as List).length,
+    };
+  }
+
+  /// Returns per-department attendance rate and count of students below 75%.
+  static Future<Map<String, dynamic>> getAttendanceAnalytics() async {
+    // Total sessions per department
+    final sessions = await supabase
+        .from('attendance_sessions')
+        .select('department_id, id')
+        .eq('status', 'ended');
+
+    // Total present records
+    final records = await supabase
+        .from('attendance_records')
+        .select('session_id, student_id, status');
+
+    // Count students with < 75% attendance
+    // We compute: for each student, total present / total sessions they should attend
+    final studentProfiles = await supabase
+        .from('profiles')
+        .select('id, full_name, department_id')
+        .eq('role', 'student')
+        .eq('is_active', true);
+
+    final sessionList = sessions as List;
+    final recordList  = records   as List;
+    final students    = studentProfiles as List;
+
+    // Per-department session counts
+    final Map<String, int> deptSessions = {};
+    for (final s in sessionList) {
+      final d = s['department_id'] as String?;
+      if (d != null) deptSessions[d] = (deptSessions[d] ?? 0) + 1;
+    }
+
+    // Per-student present counts
+    final Map<String, int> studentPresent = {};
+    for (final r in recordList) {
+      if (r['status'] == 'present' || r['status'] == 'late') {
+        final sid = r['student_id'] as String;
+        studentPresent[sid] = (studentPresent[sid] ?? 0) + 1;
+      }
+    }
+
+    // Build per-department attendance rate
+    final Map<String, List<double>> deptRates = {};
+    for (final p in students) {
+      final sid = p['id'] as String;
+      final did = p['department_id'] as String?;
+      if (did == null) continue;
+      final total = deptSessions[did] ?? 0;
+      if (total == 0) continue;
+      final present = studentPresent[sid] ?? 0;
+      deptRates.putIfAbsent(did, () => []).add(present / total * 100);
+    }
+
+    final Map<String, double> deptAvg = {};
+    deptRates.forEach((did, rates) {
+      deptAvg[did] = rates.reduce((a, b) => a + b) / rates.length;
+    });
+
+    // Count students below 75%
+    int lowAttendanceCount = 0;
+    final List<Map<String, dynamic>> lowStudents = [];
+    for (final p in students) {
+      final sid = p['id'] as String;
+      final did = p['department_id'] as String?;
+      if (did == null) continue;
+      final total = deptSessions[did] ?? 0;
+      if (total == 0) continue;
+      final pct = ((studentPresent[sid] ?? 0) / total * 100);
+      if (pct < 75) {
+        lowAttendanceCount++;
+        lowStudents.add({'name': p['full_name'], 'pct': pct.round()});
+      }
+    }
+
+    final totalSessions = sessionList.length;
+    final totalRecords  = recordList.where((r) => r['status'] == 'present' || r['status'] == 'late').length;
+    final overallRate   = totalSessions == 0 ? 0.0 : totalRecords / (totalSessions * (students.isEmpty ? 1 : students.length)) * 100;
+
+    return {
+      'overallRate': overallRate.clamp(0, 100),
+      'lowAttendanceCount': lowAttendanceCount,
+      'lowStudents': lowStudents.take(5).toList(),
+      'deptAvg': deptAvg,
     };
   }
 }
