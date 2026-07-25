@@ -373,6 +373,10 @@ class Assignment {
   final int totalMarks;
   final List<String> allowedTypes;
   final int maxFileMb;
+  /// Storage path for the professor's question file, e.g. "questions/{id}/quiz.pdf".
+  final String? questionFilePath;
+  /// Original filename shown to students, e.g. "Week3_Assignment.pdf".
+  final String? questionFileName;
   final DateTime createdAt;
   Course? course;
 
@@ -386,11 +390,14 @@ class Assignment {
     this.totalMarks = 100,
     this.allowedTypes = const ['pdf', 'docx', 'image', 'zip'],
     this.maxFileMb = 10,
+    this.questionFilePath,
+    this.questionFileName,
     DateTime? createdAt,
     this.course,
   }) : createdAt = createdAt ?? DateTime.now();
 
   bool get isOverdue => DateTime.now().isAfter(dueAt);
+  bool get hasQuestionFile => questionFilePath != null;
 
   factory Assignment.fromJson(Map<String, dynamic> j) {
     final a = Assignment(
@@ -403,6 +410,8 @@ class Assignment {
       totalMarks: j['total_marks'] as int? ?? 100,
       allowedTypes: (j['allowed_types'] as List?)?.cast<String>() ?? ['pdf', 'docx', 'image', 'zip'],
       maxFileMb: j['max_file_mb'] as int? ?? 10,
+      questionFilePath: j['question_file_path'] as String?,
+      questionFileName: j['question_file_name'] as String?,
       createdAt: j['created_at'] != null ? DateTime.parse(j['created_at'] as String) : null,
     );
     if (j['courses'] != null) a.course = Course.fromJson(j['courses'] as Map<String, dynamic>);

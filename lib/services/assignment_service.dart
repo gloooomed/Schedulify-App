@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import '../models/models.dart';
+import 'file_optimizer.dart';
 import 'supabase_client.dart';
 
 class AssignmentService {
@@ -14,8 +15,44 @@ class AssignmentService {
     return (res as List).map((j) => Assignment.fromJson(j)).toList();
   }
 
-  static Future<void> createAssignment(Map<String, dynamic> data) async {
-    await supabase.from('assignments').insert(data);
+  /// Creates an assignment row and, if a question file is supplied, uploads it
+  /// to `questions/{id}/{fileName}` then patches the row with the storage path.
+  ///
+  /// The file is run through [FileOptimizer] first — images are compressed,
+  /// all other formats are just size-capped.
+  static Future<void> createAssignmentWithFile({
+    required Map<String, dynamic> data,
+    Uint8List? fileBytes,
+    String? fileName,
+  }) async {
+    // 1. Insert the row – storage path is null until file is uploaded.
+    final inserted = await supabase
+        .from('assignments')
+        .insert(data)
+        .select('id')
+        .single();
+    final String id = inserted['id'] as String;
+
+    // 2. Upload question file if provided.
+    if (fileBytes != null && fileName != null && fileBytes.isNotEmpty) {
+      final maxMb = (data['max_file_mb'] as int?) ?? 10;
+      final optimized = await FileOptimizer.compress(
+        fileBytes,
+        fileName,
+        maxMb: maxMb,
+      );
+      final path = 'questions/$id/$fileName';
+      await supabase.storage.from('assignments').uploadBinary(
+        path,
+        optimized,
+        fileOptions: const FileOptions(upsert: true),
+      );
+      // 3. Patch the row with the storage path.
+      await supabase.from('assignments').update({
+        'question_file_path': path,
+        'question_file_name': fileName,
+      }).eq('id', id);
+    }
   }
 
   static Future<void> updateAssignment(String id, Map<String, dynamic> data) async {
@@ -76,16 +113,21 @@ class AssignmentService {
     return AssignmentSubmission.fromJson(res as Map<String, dynamic>);
   }
 
+  /// Compresses images before uploading (PDFs/ZIPs pass through unchanged),
+  /// then upserts the DB row.
   static Future<void> submitAssignment({
     required String assignmentId,
     required String studentId,
     required Uint8List fileBytes,
     required String fileName,
+    int maxMb = 10,
   }) async {
+    final optimized = await FileOptimizer.compress(fileBytes, fileName, maxMb: maxMb);
+
     final path = 'submissions/$assignmentId/$studentId/$fileName';
     await supabase.storage.from('assignments').uploadBinary(
       path,
-      fileBytes,
+      optimized,
       fileOptions: const FileOptions(upsert: true),
     );
     await supabase.from('assignment_submissions').upsert({
@@ -99,6 +141,7 @@ class AssignmentService {
 
   // ── Signed URL ─────────────────────────────────────────────────────────────
 
+  /// Generates a 1-hour signed URL for any path in the private `assignments` bucket.
   static Future<String> getSignedUrl(String storagePath) async {
     return supabase.storage
         .from('assignments')

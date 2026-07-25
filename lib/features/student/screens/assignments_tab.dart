@@ -285,6 +285,7 @@ class _AssignmentDetailSheetState extends ConsumerState<_AssignmentDetailSheet> 
         studentId: user.id,
         fileBytes: _pickedBytes!,
         fileName: _pickedFileName!,
+        maxMb: widget.assignment.maxFileMb,
       );
       widget.onSubmitted();
       if (mounted) Navigator.pop(context);
@@ -383,6 +384,49 @@ class _AssignmentDetailSheetState extends ConsumerState<_AssignmentDetailSheet> 
               const SizedBox(height: 6),
               Text(a.description!,
                   style: TextStyle(fontSize: 14, color: context.textPrimary)),
+              const SizedBox(height: 16),
+            ],
+
+            // ── Question / instructions file ──────────────────────────────
+            if (a.hasQuestionFile) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+                ),
+                child: Row(children: [
+                  const Icon(Icons.description_outlined,
+                      color: AppColors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Question File',
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary)),
+                          Text(
+                            a.questionFileName ?? 'Attachment',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                          ),
+                        ]),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => _openFile(a.questionFilePath!),
+                    icon: const Icon(Icons.download_rounded, size: 16),
+                    label: const Text('Download'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                    ),
+                  ),
+                ]),
+              ),
               const SizedBox(height: 16),
             ],
 

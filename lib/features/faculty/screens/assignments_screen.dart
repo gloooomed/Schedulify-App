@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../models/models.dart';
 import '../../../services/assignment_service.dart';
 import '../../../services/db_service.dart';
+import '../../../services/file_optimizer.dart';
 import '../../../shared/widgets/widgets.dart';
 
 class FacultyAssignmentsScreen extends ConsumerStatefulWidget {
@@ -222,6 +225,27 @@ class _AssignmentRow extends StatelessWidget {
               ]),
             ]),
           ),
+          // Question-file download (faculty preview)
+          if (a.hasQuestionFile)
+            IconButton(
+              tooltip: 'View question file',
+              icon: const Icon(Icons.download_outlined,
+                  color: AppColors.primary, size: 20),
+              onPressed: () async {
+                try {
+                  final url = await AssignmentService.getSignedUrl(a.questionFilePath!);
+                  await launchUrl(Uri.parse(url),
+                      mode: LaunchMode.externalApplication);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Could not open file: $e'),
+                      backgroundColor: AppColors.danger,
+                    ));
+                  }
+                }
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline_rounded,
                 color: AppColors.danger, size: 20),
@@ -674,6 +698,10 @@ class _CreateAssignmentSheetState extends ConsumerState<_CreateAssignmentSheet> 
   bool _saving = false;
   String? _error;
 
+  // Question file (optional)
+  Uint8List? _questionBytes;
+  String? _questionFileName;
+
   static const _typeOptions = ['pdf', 'docx', 'image', 'zip'];
 
   @override
@@ -689,6 +717,30 @@ class _CreateAssignmentSheetState extends ConsumerState<_CreateAssignmentSheet> 
     _marksCtrl.dispose();
     _maxMbCtrl.dispose();
     super.dispose();
+  }
+
+  /// Opens system file picker for the question attachment.
+  Future<void> _pickQuestionFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      withData: true,
+      type: FileType.custom,
+      allowedExtensions: const ['pdf', 'doc', 'docx', 'png', 'jpg', 'jpeg', 'zip'],
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    // Quick pre-check against current maxMb setting
+    final maxMb = int.tryParse(_maxMbCtrl.text) ?? 10;
+    final sizeMb = file.size / (1024 * 1024);
+    if (sizeMb > maxMb * 2) {
+      // Allow up to 2× here — FileOptimizer will do the final hard check.
+      setState(() => _error = 'File is too large (${sizeMb.toStringAsFixed(1)} MB).');
+      return;
+    }
+    setState(() {
+      _questionBytes = file.bytes;
+      _questionFileName = file.name;
+      _error = null;
+    });
   }
 
   Future<void> _loadCourses() async {
@@ -733,18 +785,25 @@ class _CreateAssignmentSheetState extends ConsumerState<_CreateAssignmentSheet> 
     }
     setState(() { _saving = true; _error = null; });
     try {
-      await AssignmentService.createAssignment({
-        'faculty_id': widget.facultyId,
-        'course_id': _selectedCourseId,
-        'title': _titleCtrl.text.trim(),
-        'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
-        'due_at': _dueAt!.toIso8601String(),
-        'total_marks': int.tryParse(_marksCtrl.text) ?? 100,
-        'allowed_types': _allowedTypes.toList(),
-        'max_file_mb': int.tryParse(_maxMbCtrl.text) ?? 10,
-      });
+      final maxMb = int.tryParse(_maxMbCtrl.text) ?? 10;
+      await AssignmentService.createAssignmentWithFile(
+        data: {
+          'faculty_id': widget.facultyId,
+          'course_id': _selectedCourseId,
+          'title': _titleCtrl.text.trim(),
+          'description': _descCtrl.text.trim().isEmpty ? null : _descCtrl.text.trim(),
+          'due_at': _dueAt!.toIso8601String(),
+          'total_marks': int.tryParse(_marksCtrl.text) ?? 100,
+          'allowed_types': _allowedTypes.toList(),
+          'max_file_mb': maxMb,
+        },
+        fileBytes: _questionBytes,
+        fileName: _questionFileName,
+      );
       widget.onCreated();
       if (mounted) Navigator.pop(context);
+    } on FileTooLargeException catch (e) {
+      if (mounted) setState(() { _saving = false; _error = e.message; });
     } catch (e) {
       if (mounted) setState(() { _saving = false; _error = e.toString(); });
     }
@@ -802,6 +861,52 @@ class _CreateAssignmentSheetState extends ConsumerState<_CreateAssignmentSheet> 
                 maxLines: 3,
                 prefixIcon: Icons.description_outlined,
               ),
+              const SizedBox(height: 12),
+
+              // ── Question file picker ────────────────────────────────────
+              Text('Question File (optional)',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.textSecondary)),
+              const SizedBox(height: 8),
+              if (_questionFileName != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.25)),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.attach_file_rounded,
+                        color: AppColors.primary, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _questionFileName!,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, color: context.textPrimary),
+                      ),
+                    ),
+                    IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(Icons.close_rounded,
+                          size: 18, color: context.textMuted),
+                      onPressed: () => setState(() {
+                        _questionBytes = null;
+                        _questionFileName = null;
+                      }),
+                    ),
+                  ]),
+                )
+              else
+                OutlinedButton.icon(
+                  onPressed: _saving ? null : _pickQuestionFile,
+                  icon: const Icon(Icons.upload_file_rounded, size: 18),
+                  label: const Text('Attach Question File'),
+                ),
               const SizedBox(height: 12),
 
               // Course dropdown
