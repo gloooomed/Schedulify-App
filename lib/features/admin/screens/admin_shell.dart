@@ -16,6 +16,7 @@ import '../widgets/timetables_tab.dart';
 import '../widgets/upload_tab.dart';
 import '../widgets/attendance_admin_tab.dart';
 import '../widgets/geofence_tab.dart';
+import '../widgets/assignments_admin_tab.dart';
 
 class AdminShell extends ConsumerStatefulWidget {
   final String initialSection;
@@ -57,6 +58,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
     ('upload',      Icons.auto_awesome_rounded,        'AI Upload'),
     ('attendance',  Icons.fact_check_rounded,          'Attendance'),
     ('geofence',    Icons.radar_rounded,               'Geofence'),
+    ('assignments', Icons.assignment_rounded,          'Assignments'),
   ];
 
   Future<void> _logout() async {
@@ -332,6 +334,7 @@ class _AdminShellState extends ConsumerState<AdminShell> {
       'upload'      => const UploadTab(),
       'attendance'  => const AttendanceAdminTab(),
       'geofence'    => const GeofenceTab(),
+      'assignments' => const AssignmentsAdminTab(),
       _             => const OverviewTab(),
     };
   }
