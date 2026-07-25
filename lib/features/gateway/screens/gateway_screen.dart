@@ -9,7 +9,6 @@ import '../../../config/config_store.dart';
 import '../../../services/supabase_client.dart';
 import '../../../shared/widgets/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/providers/auth_provider.dart';
 
 const _builtInUrl  = String.fromEnvironment('COLLEGE_SUPABASE_URL',      defaultValue: '');
 const _builtInKey  = String.fromEnvironment('COLLEGE_SUPABASE_ANON_KEY', defaultValue: '');

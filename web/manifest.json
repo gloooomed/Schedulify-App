@@ -1,14 +1,33 @@
 {
     "name": "Schedulify",
     "short_name": "Schedulify",
-    "description": "Multi-tenant college scheduling platform",
+    "description": "College timetable, attendance, and academic management platform",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",
+    "display_override": ["window-controls-overlay", "standalone"],
     "orientation": "portrait-primary",
     "background_color": "#0D0D14",
     "theme_color": "#0D0D14",
+    "categories": ["education", "productivity"],
     "prefer_related_applications": false,
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "My Schedule",
+            "short_name": "Schedule",
+            "description": "View today's class schedule",
+            "url": "/student/schedule",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Mark Attendance",
+            "short_name": "Attendance",
+            "description": "Mark attendance via QR",
+            "url": "/student/attendance",
+            "icons": [{ "src": "icons/Icon-192.png", "sizes": "192x192" }]
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",

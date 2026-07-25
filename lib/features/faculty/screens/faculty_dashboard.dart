@@ -21,6 +21,7 @@ class FacultyDashboard extends ConsumerStatefulWidget {
 class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   List<TimetableEntry> _schedule = [];
   bool _loading = true;
+  String? _error;
   DateTime _focusedDay = DateTime.now();
   DateTime _selectedDay = DateTime.now();
   String _section = 'schedule';
@@ -37,14 +38,17 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _load());
   }
 
-  Future<void> _load() async {
+  Future<void> _load({bool forceRefresh = false}) async {
     final user = ref.read(currentUserProvider);
     if (user == null) return;
-    setState(() => _loading = true);
+    setState(() { _loading = true; _error = null; });
     try {
-      final data = await DbService.getFacultySchedule(user.id);
+      final data = await DbService.getFacultySchedule(user.id, forceRefresh: forceRefresh);
       if (mounted) setState(() { _schedule = data; _loading = false; });
-    } catch (_) { if (mounted) setState(() => _loading = false); }
+    } catch (e) {
+      debugPrint('FacultyDashboard load error: $e');
+      if (mounted) setState(() { _loading = false; _error = e.toString(); });
+    }
   }
 
   List<TimetableEntry> _entriesForDay(DateTime day) {
@@ -189,13 +193,19 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   }
 
   Widget _buildContent() {
+    if (_error != null) {
+      return ErrorView(
+        message: 'Could not load your schedule. Check your connection.',
+        onRetry: () => _load(forceRefresh: true),
+      );
+    }
     return switch (_section) {
       'attendance' => const FacultyAttendanceScreen(),
       _ => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
             child: RefreshIndicator(
-              onRefresh: _load,
+              onRefresh: () => _load(forceRefresh: true),
               color: AppColors.primary,
               child: _ScheduleView(
                 loading: _loading,
@@ -204,7 +214,7 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                 selectedEntries: _selectedEntries,
                 selectedDay: _selectedDay,
                 focusedDay: _focusedDay,
-                onRefresh: _load,
+                onRefresh: () => _load(forceRefresh: true),
                 onDaySelected: (sel, foc) => setState(() {
                   _selectedDay = sel; _focusedDay = foc;
                 }),

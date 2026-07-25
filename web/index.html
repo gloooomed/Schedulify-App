@@ -5,16 +5,18 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Multi-tenant college scheduling platform">
+  <meta name="description" content="Schedulify — College timetable, attendance, and academic management platform">
 
   <!-- iOS PWA: hides Safari UI when launched from home screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Schedulify">
 
-  <!-- iOS home screen icons -->
+  <!-- iOS home screen icons (multiple sizes for different devices) -->
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
-  <link rel="apple-touch-icon" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/Icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icons/Icon-512.png">
 
   <!-- Theme color for browser address bar (Android Chrome) -->
@@ -23,21 +25,159 @@
 
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="assets/assets/images/App_icon.svg"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
 
   <title>Schedulify</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* ── PWA Install Banner ─────────────────────────────────── */
+    #pwa-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1A1A2E;
+      color: #FFFFFF;
+      padding: 14px 20px;
+      z-index: 9999;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.4);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    #pwa-banner .pwa-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      background: #6C63FF;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    #pwa-banner .pwa-text { flex: 1; }
+    #pwa-banner .pwa-text strong { display: block; font-size: 14px; margin-bottom: 2px; }
+    #pwa-banner .pwa-text span { font-size: 12px; color: rgba(255,255,255,0.6); }
+    #pwa-banner .pwa-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    #pwa-banner button {
+      border: none; cursor: pointer; padding: 8px 16px;
+      border-radius: 8px; font-size: 13px; font-weight: 600;
+    }
+    #pwa-install-btn {
+      background: #6C63FF; color: #fff;
+    }
+    #pwa-dismiss-btn {
+      background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+    }
+    /* iOS install instruction card */
+    #ios-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1A1A2E;
+      color: #FFFFFF;
+      padding: 16px 20px;
+      z-index: 9999;
+      box-shadow: 0 -2px 20px rgba(0,0,0,0.4);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    #ios-banner .ios-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+    }
+    #ios-banner strong { font-size: 14px; }
+    #ios-banner p {
+      font-size: 13px; color: rgba(255,255,255,0.65);
+      margin: 0; line-height: 1.5;
+    }
+    #ios-banner .ios-close {
+      position: absolute; top: 12px; right: 16px;
+      background: none; border: none; color: rgba(255,255,255,0.5);
+      font-size: 20px; cursor: pointer; padding: 4px;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- Chrome/Edge/Android PWA install banner -->
+  <div id="pwa-banner">
+    <div class="pwa-icon">📅</div>
+    <div class="pwa-text">
+      <strong>Install Schedulify</strong>
+      <span>Add to your home screen for faster access</span>
+    </div>
+    <div class="pwa-actions">
+      <button id="pwa-dismiss-btn">Not now</button>
+      <button id="pwa-install-btn">Install</button>
+    </div>
+  </div>
+
+  <!-- iOS Safari install hint -->
+  <div id="ios-banner">
+    <button class="ios-close" id="ios-close-btn">✕</button>
+    <div class="ios-row">
+      <span style="font-size:28px">📅</span>
+      <strong>Install Schedulify</strong>
+    </div>
+    <p>Tap <strong>Share</strong> (⬆) at the bottom of your browser, then tap <strong>"Add to Home Screen"</strong></p>
+  </div>
+
   <script>
-    // Detect: iOS Safari, NOT already installed as PWA.
-    (function() {
+    (function () {
+      var DISMISS_KEY = 'schedulify_pwa_dismissed';
+      var DISMISS_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+      function isDismissed() {
+        try {
+          var ts = localStorage.getItem(DISMISS_KEY);
+          return ts && (Date.now() - parseInt(ts)) < DISMISS_TTL;
+        } catch (_) { return false; }
+      }
+      function markDismissed() {
+        try { localStorage.setItem(DISMISS_KEY, Date.now().toString()); } catch (_) {}
+      }
+
+      // ── Chrome/Edge/Android: beforeinstallprompt ──────────────
+      var deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        window._deferredPwaPrompt = e;
+        if (!isDismissed()) {
+          document.getElementById('pwa-banner').style.display = 'flex';
+        }
+      });
+
+      document.getElementById('pwa-install-btn').addEventListener('click', function () {
+        document.getElementById('pwa-banner').style.display = 'none';
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(function (choice) {
+            if (choice.outcome === 'accepted') markDismissed();
+            deferredPrompt = null;
+          });
+        }
+      });
+      document.getElementById('pwa-dismiss-btn').addEventListener('click', function () {
+        document.getElementById('pwa-banner').style.display = 'none';
+        markDismissed();
+      });
+
+      // ── iOS Safari: show share hint ───────────────────────────
       var ua = navigator.userAgent;
       var isIos = /iphone|ipad|ipod/i.test(ua) && !window.MSStream;
       var isSafari = /safari/i.test(ua) && !/chrome|crios|fxios/i.test(ua);
       var isStandalone = window.navigator.standalone === true;
       window._schedulifyShowPwaPrompt = isIos && isSafari && !isStandalone;
+
+      if (window._schedulifyShowPwaPrompt && !isDismissed()) {
+        document.getElementById('ios-banner').style.display = 'block';
+      }
+      document.getElementById('ios-close-btn').addEventListener('click', function () {
+        document.getElementById('ios-banner').style.display = 'none';
+        markDismissed();
+      });
     })();
   </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

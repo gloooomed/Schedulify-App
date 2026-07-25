@@ -187,6 +187,167 @@ class ShimmerBox extends StatelessWidget {
   }
 }
 
+// ── Skeleton card (GlassCard-shaped shimmer) ──────────────────────────────────
+class SkeletonCard extends StatelessWidget {
+  final double height;
+  const SkeletonCard({super.key, this.height = 100});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ShimmerBox(height: 14, width: double.infinity, radius: 6),
+          const SizedBox(height: 10),
+          ShimmerBox(height: 11, width: 180, radius: 5),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Skeleton list tile (avatar + two lines) ───────────────────────────────────
+class SkeletonListTile extends StatelessWidget {
+  const SkeletonListTile({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          ShimmerBox(height: 44, width: 44, radius: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ShimmerBox(height: 13, width: double.infinity, radius: 5),
+                const SizedBox(height: 8),
+                ShimmerBox(height: 10, width: 140, radius: 4),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Skeleton stat row (two side-by-side stat cards) ───────────────────────────
+class SkeletonStatRow extends StatelessWidget {
+  const SkeletonStatRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _skeletonStatCard(context)),
+        const SizedBox(width: 12),
+        Expanded(child: _skeletonStatCard(context)),
+      ],
+    );
+  }
+
+  Widget _skeletonStatCard(BuildContext context) {
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.borderColor),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ShimmerBox(height: 22, width: 60, radius: 5),
+                const SizedBox(height: 6),
+                ShimmerBox(height: 10, width: 90, radius: 4),
+              ],
+            ),
+          ),
+          ShimmerBox(height: 44, width: 44, radius: 10),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Error view (fullscreen error with retry) ──────────────────────────────────
+class ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+  final IconData icon;
+
+  const ErrorView({
+    super.key,
+    required this.message,
+    required this.onRetry,
+    this.icon = Icons.cloud_off_rounded,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 44, color: AppColors.danger.withOpacity(0.7)),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Something went wrong',
+              style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: context.textPrimary),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: context.textSecondary),
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text('Try Again'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+}
+
 // ── Page header (title + optional action button) ──────────────────────────────
 class PageHeader extends StatelessWidget {
   final String title;
