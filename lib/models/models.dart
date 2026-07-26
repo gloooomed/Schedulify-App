@@ -1,3 +1,4 @@
+import 'dart:convert';
 
 class Profile {
   final String id;
@@ -361,4 +362,128 @@ class RegisteredCollege {
         plan: j['plan'] ?? 'free',
         status: j['status'] ?? 'active',
       );
+}
+
+class Assignment {
+  final String id;
+  final String courseId;
+  final String facultyId;
+  final String title;
+  final String? description;
+  final DateTime dueAt;
+  final int totalMarks;
+  final List<String> allowedTypes;
+  final int maxFileMb;
+  /// Storage path for the professor's question file, e.g. "questions/{id}/quiz.pdf".
+  final String? questionFilePath;
+  /// Original filename shown to students, e.g. "Week3_Assignment.pdf".
+  final String? questionFileName;
+  final DateTime createdAt;
+  Course? course;
+
+  Assignment({
+    required this.id,
+    required this.courseId,
+    required this.facultyId,
+    required this.title,
+    this.description,
+    required this.dueAt,
+    this.totalMarks = 100,
+    this.allowedTypes = const ['pdf', 'docx', 'image', 'zip'],
+    this.maxFileMb = 10,
+    this.questionFilePath,
+    this.questionFileName,
+    DateTime? createdAt,
+    this.course,
+  }) : createdAt = createdAt ?? DateTime.now();
+
+  bool get isOverdue => DateTime.now().isAfter(dueAt);
+  bool get hasQuestionFile => questionFilePath != null;
+
+  factory Assignment.fromJson(Map<String, dynamic> j) {
+    List<String> parseAllowedTypes(dynamic val) {
+      if (val == null) return ['pdf', 'docx', 'image', 'zip'];
+      if (val is String) {
+        try {
+          final decoded = jsonDecode(val) as List;
+          return decoded.cast<String>();
+        } catch (_) {
+          // fallback if it's not valid JSON
+          val = val.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
+        }
+      }
+      if (val is List) {
+        return val.cast<String>();
+      }
+      return ['pdf', 'docx', 'image', 'zip'];
+    }
+
+    final a = Assignment(
+      id: j['id'] as String,
+      courseId: j['course_id'] as String,
+      facultyId: j['faculty_id'] as String,
+      title: j['title'] as String,
+      description: j['description'] as String?,
+      dueAt: DateTime.parse(j['due_at'] as String),
+      totalMarks: j['total_marks'] as int? ?? 100,
+      allowedTypes: parseAllowedTypes(j['allowed_types']),
+      maxFileMb: j['max_file_mb'] as int? ?? 10,
+      questionFilePath: j['question_file_path'] as String?,
+      questionFileName: j['question_file_name'] as String?,
+      createdAt: j['created_at'] != null ? DateTime.parse(j['created_at'] as String) : null,
+    );
+    if (j['courses'] != null) a.course = Course.fromJson(j['courses'] as Map<String, dynamic>);
+    return a;
+  }
+}
+
+class AssignmentSubmission {
+  final String id;
+  final String assignmentId;
+  final String studentId;
+  final String? fileUrl;
+  final String? fileName;
+  final DateTime submittedAt;
+  final int? marksObtained;
+  final String? feedback;
+  final DateTime? gradedAt;
+  final String? gradedBy;
+  Profile? student;
+  Assignment? assignment;
+
+  AssignmentSubmission({
+    required this.id,
+    required this.assignmentId,
+    required this.studentId,
+    this.fileUrl,
+    this.fileName,
+    DateTime? submittedAt,
+    this.marksObtained,
+    this.feedback,
+    this.gradedAt,
+    this.gradedBy,
+    this.student,
+    this.assignment,
+  }) : submittedAt = submittedAt ?? DateTime.now();
+
+  bool get isGraded => marksObtained != null;
+
+  factory AssignmentSubmission.fromJson(Map<String, dynamic> j) {
+    final s = AssignmentSubmission(
+      id: j['id'] as String,
+      assignmentId: j['assignment_id'] as String,
+      studentId: j['student_id'] as String,
+      fileUrl: j['file_url'] as String?,
+      fileName: j['file_name'] as String?,
+      submittedAt: j['submitted_at'] != null ? DateTime.parse(j['submitted_at'] as String) : null,
+      marksObtained: j['marks_obtained'] as int?,
+      feedback: j['feedback'] as String?,
+      gradedAt: j['graded_at'] != null ? DateTime.parse(j['graded_at'] as String) : null,
+      gradedBy: j['graded_by'] as String?,
+    );
+    final studentData = j['student'] ?? j['profiles'];
+    if (studentData != null) s.student = Profile.fromJson(studentData as Map<String, dynamic>);
+    if (j['assignments'] != null) s.assignment = Assignment.fromJson(j['assignments'] as Map<String, dynamic>);
+    return s;
+  }
 }

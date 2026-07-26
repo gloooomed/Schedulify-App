@@ -11,6 +11,7 @@ import '../../../services/db_service.dart';
 import '../../../models/models.dart';
 import '../../../shared/widgets/widgets.dart';
 import 'attendance_screen.dart';
+import 'assignments_screen.dart';
 
 class FacultyDashboard extends ConsumerStatefulWidget {
   const FacultyDashboard({super.key});
@@ -28,8 +29,9 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _navItems = [
-    ('schedule',   Icons.calendar_month_rounded, 'Schedule'),
-    ('attendance', Icons.fact_check_rounded,     'Attendance'),
+    ('schedule',    Icons.calendar_month_rounded, 'Schedule'),
+    ('attendance',  Icons.fact_check_rounded,     'Attendance'),
+    ('assignments', Icons.assignment_rounded,     'Assignments'),
   ];
 
   @override
@@ -200,12 +202,13 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
       );
     }
     return switch (_section) {
-      'attendance' => const FacultyAttendanceScreen(),
+      'attendance'  => const FacultyAttendanceScreen(),
+      'assignments' => const FacultyAssignmentsScreen(),
       _ => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
             child: RefreshIndicator(
-              onRefresh: () => _load(forceRefresh: true),
+              onRefresh: _load,
               color: AppColors.primary,
               child: _ScheduleView(
                 loading: _loading,
@@ -214,7 +217,7 @@ class _FacultyDashboardState extends ConsumerState<FacultyDashboard> {
                 selectedEntries: _selectedEntries,
                 selectedDay: _selectedDay,
                 focusedDay: _focusedDay,
-                onRefresh: () => _load(forceRefresh: true),
+                onRefresh: _load,
                 onDaySelected: (sel, foc) => setState(() {
                   _selectedDay = sel; _focusedDay = foc;
                 }),

@@ -10,6 +10,7 @@ import '../../../services/db_service.dart';
 import '../../../models/models.dart';
 import '../../../shared/widgets/widgets.dart';
 import 'attendance_tab.dart';
+import 'assignments_tab.dart';
 
 class StudentDashboard extends ConsumerStatefulWidget {
   const StudentDashboard({super.key});
@@ -29,9 +30,10 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _navItems = [
-    ('schedule',   Icons.calendar_month_rounded, 'Schedule'),
-    ('courses',    Icons.menu_book_rounded,      'Courses'),
-    ('attendance', Icons.fact_check_rounded,     'Attendance'),
+    ('schedule',     Icons.calendar_month_rounded, 'Schedule'),
+    ('courses',      Icons.menu_book_rounded,      'Courses'),
+    ('attendance',   Icons.fact_check_rounded,     'Attendance'),
+    ('assignments',  Icons.assignment_rounded,     'Assignments'),
   ];
 
   @override
@@ -212,25 +214,20 @@ class _StudentDashboardState extends ConsumerState<StudentDashboard> {
 
   Widget _buildContent(user) {
     return switch (_section) {
-      'attendance' => const StudentAttendanceTab(),
-      'courses'    => Center(
+      'attendance'  => const StudentAttendanceTab(),
+      'assignments' => const StudentAssignmentsTab(),
+      'courses'     => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: RefreshIndicator(
-              onRefresh: () => _loadCourses(forceRefresh: true),
-              color: AppColors.primary,
-              child: _coursesView(),
-            ),
+            child: RefreshIndicator(onRefresh: () => _loadCourses(forceRefresh: true), color: AppColors.primary,
+                child: _coursesView()),
           ),
         ),
       _ => Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: RefreshIndicator(
-              onRefresh: () => _loadSchedule(forceRefresh: true),
-              color: AppColors.primary,
-              child: _scheduleView(user),
-            ),
+            child: RefreshIndicator(onRefresh: () => _loadSchedule(forceRefresh: true), color: AppColors.primary,
+                child: _scheduleView(user)),
           ),
         ),
     };
