@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import 'file_optimizer.dart';
 import 'supabase_client.dart';
@@ -68,7 +69,7 @@ class AssignmentService {
   static Future<List<AssignmentSubmission>> getSubmissionsForAssignment(String assignmentId) async {
     final res = await supabase
         .from('assignment_submissions')
-        .select('*, profiles(id,full_name,roll_number)')
+        .select('*, student:profiles!student_id(id,full_name,roll_number)')
         .eq('assignment_id', assignmentId)
         .order('submitted_at');
     return (res as List).map((j) => AssignmentSubmission.fromJson(j)).toList();

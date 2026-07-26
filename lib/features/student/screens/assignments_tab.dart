@@ -46,7 +46,9 @@ class _StudentAssignmentsTabState extends ConsumerState<StudentAssignmentsTab> {
           _loading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('Error loading student assignments: $e');
+      debugPrint(stack.toString());
       if (mounted) setState(() => _loading = false);
     }
   }

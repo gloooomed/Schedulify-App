@@ -1,3 +1,4 @@
+import 'dart:convert';
 
 class Profile {
   final String id;
@@ -400,6 +401,23 @@ class Assignment {
   bool get hasQuestionFile => questionFilePath != null;
 
   factory Assignment.fromJson(Map<String, dynamic> j) {
+    List<String> parseAllowedTypes(dynamic val) {
+      if (val == null) return ['pdf', 'docx', 'image', 'zip'];
+      if (val is String) {
+        try {
+          final decoded = jsonDecode(val) as List;
+          return decoded.cast<String>();
+        } catch (_) {
+          // fallback if it's not valid JSON
+          val = val.replaceAll('[', '').replaceAll(']', '').replaceAll('"', '').split(',');
+        }
+      }
+      if (val is List) {
+        return val.cast<String>();
+      }
+      return ['pdf', 'docx', 'image', 'zip'];
+    }
+
     final a = Assignment(
       id: j['id'] as String,
       courseId: j['course_id'] as String,
@@ -408,7 +426,7 @@ class Assignment {
       description: j['description'] as String?,
       dueAt: DateTime.parse(j['due_at'] as String),
       totalMarks: j['total_marks'] as int? ?? 100,
-      allowedTypes: (j['allowed_types'] as List?)?.cast<String>() ?? ['pdf', 'docx', 'image', 'zip'],
+      allowedTypes: parseAllowedTypes(j['allowed_types']),
       maxFileMb: j['max_file_mb'] as int? ?? 10,
       questionFilePath: j['question_file_path'] as String?,
       questionFileName: j['question_file_name'] as String?,
@@ -463,7 +481,8 @@ class AssignmentSubmission {
       gradedAt: j['graded_at'] != null ? DateTime.parse(j['graded_at'] as String) : null,
       gradedBy: j['graded_by'] as String?,
     );
-    if (j['profiles'] != null) s.student = Profile.fromJson(j['profiles'] as Map<String, dynamic>);
+    final studentData = j['student'] ?? j['profiles'];
+    if (studentData != null) s.student = Profile.fromJson(studentData as Map<String, dynamic>);
     if (j['assignments'] != null) s.assignment = Assignment.fromJson(j['assignments'] as Map<String, dynamic>);
     return s;
   }

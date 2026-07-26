@@ -46,7 +46,9 @@ class _FacultyAssignmentsScreenState
     try {
       final list = await AssignmentService.getFacultyAssignments(user.id);
       if (mounted) setState(() { _assignments = list; _loading = false; });
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Error loading assignments: $e');
+      debugPrint(stack.toString());
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -307,7 +309,9 @@ class _GradingQueueTabState extends State<_GradingQueueTab> {
     try {
       final subs = await AssignmentService.getSubmissionsForAssignment(assignmentId);
       if (mounted) setState(() { _subs[assignmentId] = subs; _loadingSubs.remove(assignmentId); });
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Error loading submissions: $e');
+      debugPrint(stack.toString());
       if (mounted) setState(() => _loadingSubs.remove(assignmentId));
     }
   }
