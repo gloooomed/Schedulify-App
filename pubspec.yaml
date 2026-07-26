@@ -1,7 +1,7 @@
 name: schedulify
 description: "Multi-tenant college scheduling SaaS"
 publish_to: 'none'
-version: 1.0.0+4
+version: 0.3.0+4
 
 environment:
   sdk: ^3.12.0

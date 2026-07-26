@@ -21,7 +21,7 @@
     <img src="https://img.shields.io/github/forks/gloooomed/Schedulify-App?style=for-the-badge&labelColor=0A0F1E&color=3B82F6&label=FORKS" alt="Forks" />
   </a>
   <a href="#">
-    <img src="https://img.shields.io/badge/VERSION-0.2.4-3B82F6?style=for-the-badge&labelColor=0A0F1E" alt="Version" />
+    <img src="https://img.shields.io/badge/VERSION-0.3.0-3B82F6?style=for-the-badge&labelColor=0A0F1E" alt="Version" />
   </a>
   <a href="#">
     <img src="https://img.shields.io/badge/PLATFORM-Android%20|%20Web%20(iOS%20PWA)-8B5CF6?style=for-the-badge&labelColor=0A0F1E" alt="Platform" />
@@ -37,9 +37,9 @@
 
 Schedulify is a closed-source mobile application built for colleges to manage timetables and track student attendance using GPS-enforced, QR-based check-ins.
 
-- **Admin** - Onboard a new college in 5 steps - no backend setup required. Manage departments, courses, classrooms, faculty, and students. Upload or AI-parse timetable data from CSV/text. Draw a geofence polygon on a live map to define the campus boundary. View live attendance sessions and audit logs.
-- **Faculty** - See daily schedule and today's classes. Start an attendance session - a rotating QR code is displayed for students to scan. End the session and view the attendance record.
-- **Student** - View enrolled courses and weekly timetable. Mark attendance by scanning the faculty's QR code. Location is verified against the campus geofence before the scanner opens. Attendance history is visible per course.
+- **Admin** - Onboard a new college in 5 steps — no backend setup required. Manage departments, courses, classrooms, faculty, and students. Upload or AI-parse timetable data from CSV/text. Draw a geofence polygon on a live map to define the campus boundary. View live attendance sessions, audit logs, and attendance analytics. Create and manage assignments with file attachments.
+- **Faculty** - See daily schedule and today's classes. Start an attendance session — a rotating QR code is displayed for students to scan. End the session and view the attendance record. Create assignments, upload question files, and review student submissions.
+- **Student** - View enrolled courses and weekly timetable. Mark attendance by scanning the faculty's QR code. Location is verified against the campus geofence before the scanner opens. Attendance history is visible per course. View and submit assignments.
 
 ---
 
@@ -49,6 +49,9 @@ Schedulify is a closed-source mobile application built for colleges to manage ti
 - **GPS-enforced attendance** - geofence is drawn by the admin. Students outside the boundary cannot open the scanner. Mock GPS is rejected.
 - **Rotating QR hashes** - the QR code changes every 5 seconds using a deterministic SHA-256 hash shared between the app and the Supabase RPC. Screenshot sharing cannot be used for proxy attendance.
 - **Role-based routing** - admin, faculty, and student each land on a separate dashboard with isolated permissions.
+- **Assignment system** - faculty create assignments with optional file attachments; students submit work; admins have a full overview.
+- **Schedule caching** - timetable and course data are cached locally so the schedule loads instantly on subsequent opens.
+- **Row-Level Security** - all database tables are protected by RLS policies; students can only see their own data.
 
 ---
 
@@ -62,6 +65,7 @@ Schedulify is a closed-source mobile application built for colleges to manage ti
 | Backend | [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com) |
 | AI | [![Groq](https://img.shields.io/badge/Groq_LLaMA-F55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com) |
 | Geofencing | [![Geolocator](https://img.shields.io/badge/Geolocator-1A2235?style=for-the-badge&labelColor=0A0F1E)](https://pub.dev/packages/geolocator) |
+| Secure Storage | [![flutter_secure_storage](https://img.shields.io/badge/Secure_Storage-1A2235?style=for-the-badge&labelColor=0A0F1E)](https://pub.dev/packages/flutter_secure_storage) |
 
 ---
 
@@ -77,22 +81,43 @@ Schedulify is a closed-source mobile application built for colleges to manage ti
 
 ---
 
-## What's New in 0.2.4
+## What's New in 0.3.0
 
-- **Crystal Clear Graphics:** The Schedulify logo now looks perfectly sharp and crisp on all your devices, no matter the screen size.
-- **Polished Light Mode Experience:** We've ironed out visual quirks in Light Mode! The navigation menu now perfectly blends with the bright theme for a seamless, beautiful look.
-- **Updated App Identity:** You'll now see our updated, modern branding right from the moment you launch the app or open a new browser tab.
-- **Smoother Android Performance:** Under-the-hood upgrades ensure the Android app launches faster and runs more reliably than ever.
+**Assignments**
+- Faculty can create assignments and attach question files directly from the app.
+- Students can view and submit assignments per course.
+- Admins have a full assignment overview across all courses.
+- File optimizer compresses uploads before storing to Supabase Storage.
+
+**Performance & PWA**
+- Timetable and course data is now cached locally — schedule loads instantly after the first open.
+- Attendance analytics added to the admin overview with rate charts and session breakdowns.
+- PWA install prompt, offline icons, and improved `manifest.json` for a better installable web experience.
+- Supabase initialization flow refactored for more reliable session restoration.
+
+**Security Hardening**
+- Row-Level Security (RLS) enabled on all core tables.
+- Fixed infinite RLS recursion bug (`42P17`) using a `SECURITY DEFINER` helper function.
+- Department-scoped enrollment enforced — students cannot see courses outside their branch.
+- Service role key now stored in the device's encrypted keystore (`flutter_secure_storage`).
+
+**Admin Capabilities**
+- Admins can delete faculty and student profiles directly from the Users tab.
+- Cascade delete cleans up all related enrollments and attendance records automatically.
+- Service role key can be entered securely from the admin panel via the 🔑 key icon.
+
+**Bug Fixes**
+- Fixed APK build failure caused by a missing `strings.xml` resource file.
+- Fixed silent crash in the student dashboard causing blank screens.
+- Fixed students not being enrolled when added after a timetable was published.
 
 ---
 
 ## Coming in the Next Update
 
-- **Course Visibility Fix:** We will be deploying a crucial patch to ensure all your enrolled courses reliably appear in your student profile without fail.
-- **Overall Polish & Refinement:** Expect an even smoother experience! We are preparing major under-the-hood tweaks to make every tap and swipe feel lightning-fast.
-- **Real-Time Schedule Alerts:** Soon, you will be able to receive instant push notifications whenever a professor reschedules a class, changes a venue, or makes an announcement.
-- **Interactive Campus Navigation:** We are building a dynamic campus map that will guide you straight to the correct building and room for your next class.
-- **Study Group Hubs:** Get ready for a brand-new social space! You will soon be able to effortlessly connect with classmates, form study groups, and share resources directly within the app.
+- **Real-Time Schedule Alerts:** Push notifications when a professor reschedules a class or changes venue.
+- **Interactive Campus Navigation:** Dynamic campus map guiding students to the correct building and room.
+- **Study Group Hubs:** In-app space to form study groups and share resources with classmates.
 
 ---
 
